@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "82830612690",
+    "project_id": "calorai-8d474",
+    "storage_bucket": "calorai-8d474.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:82830612690:android:6b74e0c6502b79a9f5350b",
+        "android_client_info": {
+          "package_name": "app.calorai.calorai"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBkGTIvT3e-L6xvqDWkkZauHBkOAKgF1vs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
