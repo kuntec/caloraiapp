@@ -6,6 +6,7 @@ import 'package:calorai/screens/dashboard_screen.dart';
 import 'package:calorai/screens/exercise/log_exercise.dart';
 import 'package:calorai/screens/food/log_food.dart';
 import 'package:calorai/screens/food/food_logging_screen.dart';
+import 'package:calorai/screens/streak_screen.dart';
 import 'package:flutter/material.dart';
 
 class MainNavigationScreen extends StatefulWidget {
@@ -21,7 +22,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     DashboardScreen(),
     LogFood(),
     LogExercise(),
-    FoodLogingsScreen(),
+    StreakScreen(),
   ];
   @override
   Widget build(BuildContext context) {

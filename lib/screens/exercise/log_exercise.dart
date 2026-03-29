@@ -27,7 +27,7 @@ class _LogExerciseState extends State<LogExercise> {
           style: TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.w800,
-            fontSize: 20,
+            fontSize: 16,
           ),
         ),
         // leading: Padding(
@@ -56,74 +56,129 @@ class _LogExerciseState extends State<LogExercise> {
       body: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
           child: Column(children: [
+            // exerciseBox(
+            //     Icons.run_circle, "Run", "Running, jogging, sprinting, etc.",
+            //     () {
+            //   MyUtility.changePage(
+            //       context,
+            //       RunSetupScreen(
+            //         title: "Run",
+            //       ));
+            // }),
+            // exerciseBox(Icons.line_weight, "Weight lifting",
+            //     "Machines, free weights, etc", () {
+            //   MyUtility.changePage(
+            //       context,
+            //       RunSetupScreen(
+            //         title: "Weight lifting",
+            //       ));
+            // }),
+            // exerciseBox(
+            //     Icons.description, "Describe", "Write your workout in text",
+            //     () {
+            //   MyUtility.changePage(context, ComingSoon());
+            // }),
+            // exerciseBox(Icons.local_fire_department_outlined, "Manual",
+            //     "Enter exactly how many calories you burned", () {
+            //   MyUtility.changePage(
+            //       context,
+            //       AddBurnedCaloriesScreen(
+            //         type: "manual",
+            //         name: "Manual Calorie",
+            //         intensity: "Normal",
+            //         durationMinutes: 0,
+            //         caloriesBurned: 0,
+            //       ));
+            // })
             exerciseBox(
-                Icons.run_circle, "Run", "Running, jogging, sprinting, etc.",
-                () {
-              MyUtility.changePage(
-                  context,
-                  RunSetupScreen(
-                    title: "Run",
-                  ));
-            }),
-            exerciseBox(Icons.line_weight, "Weight lifting",
-                "Machines, free weights, etc", () {
-              MyUtility.changePage(
-                  context,
-                  RunSetupScreen(
-                    title: "Weight lifting",
-                  ));
-            }),
+              icon: Icons.run_circle,
+              title: "Run",
+              subtitle: "Running, jogging, sprinting, etc.",
+              onTap: () {
+                MyUtility.changePage(
+                    context,
+                    RunSetupScreen(
+                      title: "Run",
+                    ));
+              },
+            ),
             exerciseBox(
-                Icons.description, "Describe", "Write your workout in text",
-                () {
-              MyUtility.changePage(context, ComingSoon());
-            }),
-            exerciseBox(Icons.local_fire_department_outlined, "Manual",
-                "Enter exactly how many calories you burned", () {
-              MyUtility.changePage(
-                  context,
-                  AddBurnedCaloriesScreen(
-                    type: "manual",
-                    name: "Manual Calorie",
-                    intensity: "Normal",
-                    durationMinutes: 0,
-                    caloriesBurned: 0,
-                  ));
-            })
+              icon: Icons.fitness_center,
+              title: "Weight lifting",
+              subtitle: "Machines, free weights, etc",
+              onTap: () {
+                MyUtility.changePage(
+                    context,
+                    RunSetupScreen(
+                      title: "Weight lifting",
+                    ));
+              },
+            ),
+            exerciseBox(
+              icon: Icons.description,
+              title: "Describe",
+              subtitle: "Write your workout in text",
+              onTap: () {
+                MyUtility.changePage(context, ComingSoon());
+              },
+            ),
+            exerciseBox(
+              icon: Icons.local_fire_department_outlined,
+              title: "Manual",
+              subtitle: "Enter exactly how many calories you burned",
+              onTap: () {
+                MyUtility.changePage(
+                    context,
+                    AddBurnedCaloriesScreen(
+                      type: "manual",
+                      name: "Manual Calorie",
+                      intensity: "Normal",
+                      durationMinutes: 0,
+                      caloriesBurned: 0,
+                    ));
+              },
+            ),
           ])),
     );
   }
 
-  Widget exerciseBox(
-      dynamic icon, dynamic title, dynamic subtitle, dynamic onTap) {
+  Widget exerciseBox({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
     return InkWell(
       onTap: onTap,
       child: Container(
         height: 80,
-        margin: EdgeInsets.only(bottom: 30),
+        margin: const EdgeInsets.only(bottom: 30),
         decoration: kContainerBox,
         child: Row(
           children: [
-            SizedBox(width: 20),
+            const SizedBox(width: 20),
             Icon(
               icon,
               size: 50,
+              color: primaryOrangeDark,
             ),
-            SizedBox(width: 20),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(fontSize: 18),
-                ),
-                Text(
-                  subtitle,
-                  style: TextStyle(fontSize: 12),
-                )
-              ],
-            )
+            const SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(fontSize: 18),
+                  ),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),

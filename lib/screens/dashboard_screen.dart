@@ -30,82 +30,13 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  //final StepsService _stepsService = StepsService();
-  // String _status = "Not connected";
-  // int _steps = 0;
-  // Future<void> _connect() async {
-  //   setState(() {
-  //     isLoading = true;
-  //     _status = "Requesting permission...";
-  //   });
-  //
-  //   try {
-  //     final granted = await _stepsService.connectAndAuthorize();
-  //     if (!granted) {
-  //       setState(() {
-  //         _status = "Permission denied. Please allow Steps in Health Connect.";
-  //         isLoading = false;
-  //       });
-  //       return;
-  //     }
-  //
-  //     setState(() {
-  //       _status = "Permission granted. Fetching steps...";
-  //     });
-  //
-  //     final todaySteps = await _stepsService.getTodaySteps();
-  //
-  //     setState(() {
-  //       _steps = todaySteps;
-  //       _status = "Connected ✅";
-  //       isLoading = false;
-  //     });
-  //
-  //     if (todaySteps == 0) {
-  //       // Helpful hint on HONOR devices
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         const SnackBar(
-  //           content: Text(
-  //             "Steps are 0. Open Health Connect → Data sources & priority, and ensure a provider (HONOR Health / Google Fit) is writing steps.",
-  //           ),
-  //         ),
-  //       );
-  //     }
-  //   } catch (e) {
-  //     setState(() {
-  //       _status = "Error: $e";
-  //       isLoading = false;
-  //     });
-  //   }
-  // }
-  //
-  // Future<void> _refreshSteps() async {
-  //   setState(() {
-  //     isLoading = true;
-  //     _status = "Refreshing steps...";
-  //   });
-  //
-  //   try {
-  //     final todaySteps = await _stepsService.getTodaySteps();
-  //     setState(() {
-  //       _steps = todaySteps;
-  //       _status = "Connected ✅";
-  //       isLoading = false;
-  //     });
-  //   } catch (e) {
-  //     setState(() {
-  //       _status = "Error: $e";
-  //       isLoading = false;
-  //     });
-  //   }
-  // }
-
   final health = Health();
   int _currentSteps = 0;
   dynamic metrics;
   bool isLoading = false;
   dynamic activities;
   DateTime currentDate = DateTime.now();
+  String selectedDate = "";
 
   @override
   void initState() {
@@ -114,9 +45,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final now = DateTime.now();
     final start = DateTime(now.year, now.month, now.day); // today 00:00
     final end = now;
-    print("1. Start $start end $end");
+    selectedDate = DateFormat('yyyy-MM-dd').format(now);
+    print("Selected Date " + selectedDate);
     getTodaySteps(start, end);
-    print("Current Steps ${_currentSteps}");
     getDailyMetricsToday();
     getRecentActivity();
   }
@@ -155,6 +86,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
     String currentDate = DateFormat('yyyy-MM-dd').format(now);
     RecentActivityData activityData =
         await apiCall.recentActivity(currentDate, token);
+    setState(() {
+      activities = activityData.activities;
+    });
+  }
+
+  Future<void> getRecentActivityByDate(String date) async {
+    ApiCall apiCall = ApiCall();
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    String token = preferences.getString("token").toString();
+    print("Get Recent Activity " + date);
+    RecentActivityData activityData = await apiCall.recentActivity(date, token);
     setState(() {
       activities = activityData.activities;
     });
@@ -210,23 +152,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   onDateChange: (value) {
                     print("This is ${value}");
                     getDailyMetricsByDate(value);
-                    DateTime selectedDate = DateTime.parse(value);
-
+                    DateTime sd = DateTime.parse(value);
+                    setState(() {
+                      selectedDate = value;
+                    });
                     final start = DateTime(
-                      selectedDate.year,
-                      selectedDate.month,
-                      selectedDate.day,
+                      sd.year,
+                      sd.month,
+                      sd.day,
                     );
 
                     final now = DateTime.now();
 
-                    final bool isToday = selectedDate.year == now.year &&
-                        selectedDate.month == now.month &&
-                        selectedDate.day == now.day;
+                    final bool isToday = sd.year == now.year &&
+                        sd.month == now.month &&
+                        sd.day == now.day;
 
                     final end =
                         isToday ? now : start.add(const Duration(days: 1));
                     getTodaySteps(start, end);
+                    getRecentActivityByDate(value);
                   },
                 ),
 
@@ -237,11 +182,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       borderRadius: BorderRadius.only(
                           topLeft: Radius.circular(40),
                           topRight: Radius.circular(40))),
-                  margin: const EdgeInsets.only(top: 230),
+                  margin: const EdgeInsets.only(top: 225),
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 30),
+                    padding: const EdgeInsets.only(top: 15),
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 18),
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -250,6 +195,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             children: [
                               Expanded(
                                 child: _StatCard(
+                                  type: 'Calories',
                                   bgColor: primaryOrangeDark,
                                   icon: Icons.local_fire_department,
                                   title: "Today Calories",
@@ -281,6 +227,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               const SizedBox(width: 14),
                               Expanded(
                                 child: _StatCard(
+                                  type: 'Steps',
                                   bgColor: primaryGreenDark,
                                   icon: Icons.directions_walk,
                                   title: "Daily Steps",
@@ -297,6 +244,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           WaterIntakeWidget(
                             total: metrics.waterIntake.totalMl,
                             goal: metrics.waterIntake.goalMl,
+                            currentDate: selectedDate,
                           ),
                           // ============= PIE CHART SECTION ============
                           //_SectionHeader(title: "Pie Chart"),
@@ -308,31 +256,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           // ============= CHALLENGES SECTION ============
                           _SectionHeader(title: "Recently Uploaded"),
                           activities == null
-                              ? const Center(child: CircularProgressIndicator())
+                              ? const Center(
+                                  child: CircularProgressIndicator(
+                                  color: primaryOrangeLight,
+                                ))
                               : activities.isEmpty
                                   ? const Padding(
                                       padding:
                                           EdgeInsets.symmetric(vertical: 10),
                                       child: Center(
-                                          child: Text("No Activities found")),
+                                          child: Column(
+                                        children: [
+                                          Icon(
+                                            Icons.edit_document,
+                                            color: primaryOrangeDark,
+                                            size: 30,
+                                          ),
+                                          Text(
+                                            "No Activities found",
+                                            style: TextStyle(fontSize: 12),
+                                          ),
+                                        ],
+                                      )),
                                     )
                                   : Container(
                                       child: ListView.builder(
+                                        padding: EdgeInsets.only(top: 10),
                                         itemCount: activities.length,
                                         shrinkWrap: true,
                                         physics:
                                             const NeverScrollableScrollPhysics(),
                                         itemBuilder: (context, index) {
-                                          // final item = activities[index];
-                                          //
-                                          // return Padding(
-                                          //   padding: const EdgeInsets.only(
-                                          //       bottom: 10),
-                                          //   child: _ActivityCard(
-                                          //       item: activities[index]),
-                                          // );
                                           final item = activities[index];
-
                                           return Dismissible(
                                             key: ValueKey(
                                                 "${item.type}_${item.id}"),
@@ -347,7 +302,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                               decoration: BoxDecoration(
                                                 color: Colors.red,
                                                 borderRadius:
-                                                    BorderRadius.circular(14),
+                                                    BorderRadius.circular(15),
                                               ),
                                               child: const Icon(Icons.delete,
                                                   color: Colors.white,
@@ -435,48 +390,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         },
                                       ),
                                     ),
-                          // Expanded(
-                          //   child: isLoading || activities == null
-                          //       ? const Center(
-                          //           child: CircularProgressIndicator())
-                          //       : RefreshIndicator(
-                          //           onRefresh: () => getRecentActivity(),
-                          //           color: kMainThemeColor,
-                          //           child: activities.isEmpty
-                          //               ? ListView(
-                          //                   physics:
-                          //                       const AlwaysScrollableScrollPhysics(),
-                          //                   children: const [
-                          //                     SizedBox(height: 200),
-                          //                     Center(
-                          //                         child: Text(
-                          //                             "No Activities found")),
-                          //                   ],
-                          //                 )
-                          //               : ListView.builder(
-                          //                   physics:
-                          //                       const AlwaysScrollableScrollPhysics(),
-                          //                   itemCount: activities.length,
-                          //                   itemBuilder: (context, index) =>
-                          //                       _ActivityCard(
-                          //                           item: activities[index])),
-                          //         ),
-                          // ),
-//                    const SizedBox(height: 12),
-
-                          // const _ChallengeCard(
-                          //   title: "2L Water Daily",
-                          //   subtitle: "Completed",
-                          //   isCompleted: true,
-                          // ),
-                          // const SizedBox(height: 12),
-                          // const _ChallengeCard(
-                          //   title: "No Sugar 3 Day",
-                          //   subtitle: "1/3",
-                          //   isCompleted: false,
-                          // ),
-
-//                    const SizedBox(height: 80),
                         ],
                       ),
                     ),
@@ -541,7 +454,7 @@ class _DashboardHeader extends StatelessWidget {
     return ClipPath(
       //clipper: _HeaderClipper(),
       child: Container(
-        height: 250,
+        height: 300,
         width: double.infinity,
         padding: const EdgeInsets.only(top: 50),
         decoration: const BoxDecoration(
@@ -568,11 +481,10 @@ class _DashboardHeader extends StatelessWidget {
             //     Icon(Icons.signal_cellular_4_bar, color: Colors.white),
             //   ],
             // ),
-            const SizedBox(height: 15),
-
+            const SizedBox(height: 10),
             // GREETING + NAME ROW
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              padding: const EdgeInsets.symmetric(horizontal: 10.0),
               child: Row(
                 children: [
                   // Container(
@@ -598,7 +510,7 @@ class _DashboardHeader extends StatelessWidget {
                               "${FirebaseAuth.instance.currentUser!.displayName.toString()}",
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 20,
+                            fontSize: 18,
                             fontWeight: FontWeight.w700,
                           ),
                         )
@@ -611,7 +523,7 @@ class _DashboardHeader extends StatelessWidget {
                       MyUtility.changePage(context, ProfileScreen());
                     },
                     child: CircleAvatar(
-                      radius: 28,
+                      radius: 20,
                       backgroundImage: NetworkImage(
                         FirebaseAuth.instance.currentUser!.photoURL.toString(),
                       ),
@@ -628,7 +540,7 @@ class _DashboardHeader extends StatelessWidget {
               child: const Text(
                 "Stay on Track for Nutrition Needs",
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
                 ),
@@ -680,6 +592,7 @@ class _StatCard extends StatelessWidget {
   final String title;
   final String value;
   final String total;
+  final String type;
 
   const _StatCard({
     required this.bgColor,
@@ -687,16 +600,17 @@ class _StatCard extends StatelessWidget {
     required this.title,
     required this.value,
     required this.total,
+    required this.type,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       //height: 140,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
             color: bgColor.withOpacity(0.4),
@@ -708,32 +622,46 @@ class _StatCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          SizedBox(
-            width: 100,
-            height: 100,
-            child: CustomPaint(
-              painter: CalorieRingPainter(progress: 0.75),
-              child: Center(
-                child: Icon(
-                  icon,
-                  size: 30,
-                  color: Colors.black,
-                ),
+          Container(
+            decoration:
+                BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+            width: 60,
+            height: 60,
+            child: Center(
+              child: Icon(
+                icon,
+                size: 40,
+                color:
+                    type == "Calories" ? primaryOrangeDark : primaryGreenDark,
               ),
             ),
           ),
+          // SizedBox(
+          //   width: 100,
+          //   height: 100,
+          //   child: CustomPaint(
+          //     painter: CalorieRingPainter(progress: 0.75),
+          //     child: Center(
+          //       child: Icon(
+          //         icon,
+          //         size: 30,
+          //         color: Colors.black,
+          //       ),
+          //     ),
+          //   ),
+          // ),
           //Icon(icon, color: Colors.white, size: 42),
           const SizedBox(height: 10),
           Text(
             title,
-            style: const TextStyle(color: Colors.white, fontSize: 14),
+            style: const TextStyle(color: Colors.white, fontSize: 12),
           ),
           const SizedBox(height: 4),
           Text(
             "$value of $total",
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 20,
+              fontSize: 16,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -765,14 +693,14 @@ class _SectionHeader extends StatelessWidget {
             Text(
               title,
               style: const TextStyle(
-                fontSize: 18,
+                fontSize: 14,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 3),
             Container(
               height: 3,
-              width: 40,
+              width: 60,
               color: primaryOrangeDark,
             ),
           ],

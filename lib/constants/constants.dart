@@ -43,6 +43,8 @@ const kMessages = "Messages";
 const kAiCourses = "AI Courses";
 const kGenerateAiCourses = "Generate Courses";
 
+const kWaterCup = 1000;
+
 const colorCodes = [
   0xFF3DB2FF,
   0xFF004AAD,

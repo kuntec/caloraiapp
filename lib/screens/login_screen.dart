@@ -95,8 +95,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 // Logo
                 Center(
                   child: Container(
-                    height: 64,
-                    width: 64,
+                    height: 100,
+                    width: 100,
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
@@ -108,10 +108,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         )
                       ],
                     ),
-                    child: const Icon(Icons.local_dining,
-                        color: primaryOrangeDark, size: 32),
+                    // child: const Icon(Icons.local_dining,
+                    //     color: primaryOrangeDark, size: 32),
                     // Replace with your asset logo:
-                    // child: Image.asset("assets/logo.png"),
+                    child: Image.asset("assets/images/logo.jpg"),
                   ),
                 ),
                 const SizedBox(height: 12),

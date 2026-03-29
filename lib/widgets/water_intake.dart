@@ -6,7 +6,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 class WaterIntakeWidget extends StatefulWidget {
   int goal;
   int total;
-  WaterIntakeWidget({required this.goal, required this.total, super.key});
+  String currentDate;
+  WaterIntakeWidget(
+      {required this.goal,
+      required this.total,
+      required this.currentDate,
+      super.key});
 
   @override
   State<WaterIntakeWidget> createState() => _WaterIntakeWidgetState();
@@ -29,8 +34,8 @@ class _WaterIntakeWidgetState extends State<WaterIntakeWidget> {
       decoration: kContainerBox,
       child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
         Container(
-            padding: EdgeInsets.all(20),
-            margin: EdgeInsets.all(5),
+            padding: EdgeInsets.all(10),
+            margin: EdgeInsets.all(10),
             decoration: kContainerBox.copyWith(color: primaryOrangeDark),
             child: Icon(
               Icons.water_drop,
@@ -42,13 +47,16 @@ class _WaterIntakeWidgetState extends State<WaterIntakeWidget> {
           children: [
             Text(
               "Water",
-              style: TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
             ),
             isLoading
                 ? CircularProgressIndicator(
                     color: primaryOrangeLight,
                   )
-                : Text("${currentIntake} ml / ${widget.goal} ml")
+                : Text(
+                    "${currentIntake} ml / ${widget.goal} ml",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                  )
           ],
         ),
         Row(
@@ -58,10 +66,11 @@ class _WaterIntakeWidgetState extends State<WaterIntakeWidget> {
                 if (currentIntake == 0) {
                   return;
                 }
+
                 setState(() {
-                  currentIntake -= 10;
+                  currentIntake -= kWaterCup;
                 });
-                updateWaterIntake();
+                updateWaterIntake(widget.currentDate);
               },
               icon: Icon(Icons.remove_circle_outline_outlined),
               iconSize: 40,
@@ -69,9 +78,9 @@ class _WaterIntakeWidgetState extends State<WaterIntakeWidget> {
             IconButton(
               onPressed: () {
                 setState(() {
-                  currentIntake += 10;
+                  currentIntake += kWaterCup;
                 });
-                updateWaterIntake();
+                updateWaterIntake(widget.currentDate);
               },
               icon: Icon(Icons.add_circle_outline),
               iconSize: 40,
@@ -82,14 +91,14 @@ class _WaterIntakeWidgetState extends State<WaterIntakeWidget> {
     );
   }
 
-  Future<void> updateWaterIntake() async {
+  Future<void> updateWaterIntake(String date) async {
     setState(() {
       isLoading = true;
     });
     ApiCall apiCall = new ApiCall();
     SharedPreferences preferences = await SharedPreferences.getInstance();
     String token = preferences.getString("token").toString();
-    await apiCall.updateWaterIntake(currentIntake, token);
+    await apiCall.updateWaterIntake(currentIntake, token, date);
     setState(() {
       widget.total = currentIntake;
       isLoading = false;

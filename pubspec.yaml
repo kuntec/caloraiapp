@@ -37,8 +37,7 @@ dependencies:
   google_fonts: ^6.2.1
   http: ^1.4.0
   fluttertoast: ^8.2.12
-  connectivity_plus: ^7.0.0
-  shared_preferences: ^2.5.3
+  shared_preferences: ^2.5.4
   flutter_secure_storage: ^10.0.0
   intl: ^0.20.2
   firebase_core: ^4.4.0
@@ -49,6 +48,7 @@ dependencies:
   flutter_launcher_icons: ^0.14.4
   url_launcher: ^6.3.2
   permission_handler: ^12.0.1
+  in_app_purchase: ^3.2.3
 
 dev_dependencies:
   flutter_test:
@@ -102,10 +102,10 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
+  fonts:
+    - family: QBOne
+      fonts:
+        - asset: assets/fonts/qb-one-regular.ttf
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic
   #   - family: Trajan Pro

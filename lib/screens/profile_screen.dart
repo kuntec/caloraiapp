@@ -1,6 +1,8 @@
 import 'package:calorai/api/api_call.dart';
+import 'package:calorai/constants/constants.dart';
 import 'package:calorai/constants/utility.dart';
 import 'package:calorai/models/UserRegisterData.dart';
+import 'package:calorai/screens/setting_screen.dart';
 import 'package:calorai/screens/splash_screen.dart';
 import 'package:calorai/widgets/editable_round_image.dart';
 import 'package:calorai/widgets/gradient_button.dart';
@@ -106,13 +108,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: bg,
       appBar: AppBar(
         backgroundColor: bg,
+        foregroundColor: primaryOrangeDark,
         elevation: 0,
         title: const Text(
           "My Profile",
-          style: TextStyle(color: textPrimary, fontWeight: FontWeight.w800),
+          style: TextStyle(
+              color: primaryOrangeDark,
+              fontWeight: FontWeight.w800,
+              fontSize: 14),
         ),
         centerTitle: true,
-        iconTheme: const IconThemeData(color: textPrimary),
+        iconTheme: const IconThemeData(color: primaryOrangeDark),
+        actions: [
+          IconButton(
+            color: primaryOrangeDark,
+            onPressed: () {
+              MyUtility.changePage(context, SettingScreen());
+            },
+            icon: Icon(Icons.settings),
+          )
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(

@@ -54,11 +54,11 @@ class _HorizontaldatepickerState extends State<Horizontaldatepicker> {
               widget.onDateSelected!(date);
             },
             child: Container(
-              width: 65,
-              margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+              width: 60,
+              margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
               decoration: BoxDecoration(
                 color: isSelected ? Colors.blue : Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -75,7 +75,7 @@ class _HorizontaldatepickerState extends State<Horizontaldatepicker> {
                     date.day.toString(),
                     style: TextStyle(
                       color: isSelected ? Colors.white : Colors.black,
-                      fontSize: 18,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
                   ),

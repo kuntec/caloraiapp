@@ -1,23 +1,23 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'package:connectivity_plus/connectivity_plus.dart';
+//import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:http/http.dart' as http;
 
 class HttpCall {
   final Duration _timeoutDuration = const Duration(seconds: 15);
 
   /// ✅ Check internet connection before every API call
-  Future<bool> _hasInternet() async {
-    final connectivityResult = await Connectivity().checkConnectivity();
-    return connectivityResult != ConnectivityResult.none;
-  }
+  // Future<bool> _hasInternet() async {
+  //   final connectivityResult = await Connectivity().checkConnectivity();
+  //   return connectivityResult != ConnectivityResult.none;
+  // }
 
   /// ✅ Generic GET request
   Future<http.Response> get(Uri uri, {Map<String, String>? headers}) async {
-    if (!await _hasInternet()) {
-      throw Exception("No Internet Connection");
-    }
+    // if (!await _hasInternet()) {
+    //   throw Exception("No Internet Connection");
+    // }
 
     try {
       final response =
@@ -38,9 +38,9 @@ class HttpCall {
   /// ✅ Generic POST request
   Future<http.Response> post(
       Uri uri, Map<String, String> headers, Map<String, dynamic> params) async {
-    if (!await _hasInternet()) {
-      throw Exception("No Internet Connection");
-    }
+    // if (!await _hasInternet()) {
+    //   throw Exception("No Internet Connection");
+    // }
     try {
       final response = await http
           .post(uri, headers: headers, body: jsonEncode(params))
@@ -60,9 +60,9 @@ class HttpCall {
 
   /// ✅ DELETE request
   Future<http.Response> delete(Uri uri, {Map<String, String>? headers}) async {
-    if (!await _hasInternet()) {
-      throw Exception("No Internet Connection");
-    }
+    // if (!await _hasInternet()) {
+    //   throw Exception("No Internet Connection");
+    // }
 
     try {
       final response =

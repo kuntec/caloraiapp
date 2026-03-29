@@ -46,7 +46,7 @@ class _RunSetupScreenState extends State<RunSetupScreen> {
   Widget build(BuildContext context) {
     const bg = Color(0xFFF7F7FB);
     const card = Color(0xFFF3F2F8);
-    const ink = Color(0xFF0E0E10);
+    const ink = primaryOrangeDark;
 
     return Scaffold(
       backgroundColor: bg,
@@ -254,7 +254,7 @@ class _RunSetupScreenState extends State<RunSetupScreen> {
                 height: 54,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: ink,
+                    backgroundColor: primaryOrangeDark,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(28),
@@ -400,7 +400,7 @@ class _CircleIconButton extends StatelessWidget {
         ),
         child: Icon(
           icon,
-          color: const Color(0xFF0E0E10),
+          color: primaryOrangeDark,
         ),
       ),
     );

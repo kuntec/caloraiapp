@@ -78,7 +78,7 @@ class _AddBurnedCaloriesScreenState extends State<AddBurnedCaloriesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const ink = Color(0xFF0E0E10);
+    const ink = primaryOrangeDark;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -297,7 +297,7 @@ class _CircleButton extends StatelessWidget {
           shape: BoxShape.circle,
           color: Color(0xFFF2F2F6),
         ),
-        child: Icon(icon, color: const Color(0xFF0E0E10)),
+        child: Icon(icon, color: primaryOrangeDark),
       ),
     );
   }

@@ -1,3 +1,4 @@
+import 'package:calorai/constants/constants.dart';
 import 'package:flutter/cupertino.dart';
 import 'dart:math';
 
@@ -19,7 +20,8 @@ class CalorieRingPainter extends CustomPainter {
 
     final fgPaint = Paint()
       ..shader = const LinearGradient(
-        colors: [Color(0xFF0E0E10), Color(0xFF2C2C30)],
+//        colors: [Color(0xFF0E0E10), Color(0xFF2C2C30)],
+        colors: [primaryOrangeDark, primaryOrangeDark],
       ).createShader(Rect.fromCircle(center: center, radius: radius))
       ..strokeWidth = stroke
       ..strokeCap = StrokeCap.round

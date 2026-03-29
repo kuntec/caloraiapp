@@ -217,6 +217,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             return null;
                           },
                         ),
+                        const SizedBox(height: 14),
+                        _InputField(
+                          controller: _confirmPassCtrl,
+                          hintText: "Confirm Password",
+                          prefixIcon: Icons.lock_outline,
+                          obscureText: _obscure,
+                          suffixIcon: _obscure
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          onSuffixTap: () =>
+                              setState(() => _obscure = !_obscure),
+                          validator: (v) {
+                            final value = (v ?? "");
+                            if (value.isEmpty) return "Password is required";
+                            if (value.length < 6) return "Minimum 6 characters";
+                            return null;
+                          },
+                        ),
 
                         const SizedBox(height: 10),
 

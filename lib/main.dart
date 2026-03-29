@@ -30,6 +30,7 @@ class MyApp extends StatelessWidget {
       title: 'Calor Ai',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        fontFamily: 'QBOne',
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),

@@ -40,7 +40,9 @@ class _LogFoodState extends State<LogFood> {
   }
 
   void _load({String? query}) {
+    print("Load Food");
     final q = query ?? _query;
+    print(q);
     setState(() {
       _query = q;
       _future = searchFood(query: _query);
@@ -80,11 +82,10 @@ class _LogFoodState extends State<LogFood> {
 
   Future<List<Food>> searchFood({required String query}) async {
     List<Food> foods = [];
-
     ApiCall apiCall = ApiCall();
     SharedPreferences preferences = await SharedPreferences.getInstance();
     String? token = preferences.getString("token");
-    SearchFoodData searchFoodData = await apiCall.searchFood(token!);
+    SearchFoodData searchFoodData = await apiCall.searchFood(token!, query);
     print(searchFoodData.total);
     foods.addAll(searchFoodData.foods!);
     setState(() {
@@ -107,7 +108,7 @@ class _LogFoodState extends State<LogFood> {
           style: TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.w800,
-            fontSize: 20,
+            fontSize: 16,
           ),
         ),
         actions: [
@@ -140,7 +141,10 @@ class _LogFoodState extends State<LogFood> {
             // 📋 LIST AREA
             Expanded(
               child: isLoading || myFoods == null
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                      color: primaryOrangeLight,
+                    ))
                   : RefreshIndicator(
                       onRefresh: () => searchFood(query: ""),
                       color: kMainThemeColor,
@@ -331,7 +335,7 @@ class _LogFoodState extends State<LogFood> {
                 Text(
                   "${food.name}",
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 14,
                     fontWeight: FontWeight.w900,
                     color: Colors.black,
                   ),
@@ -346,7 +350,7 @@ class _LogFoodState extends State<LogFood> {
                     borderColor: Colors.white),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             Row(
               children: [
                 Expanded(
@@ -360,7 +364,7 @@ class _LogFoodState extends State<LogFood> {
                 Expanded(
                   child: _MacroTile(
                     label: "Carbs",
-                    value: "${food.nutrients!.carbsG}g",
+                    value: "${food.nutrients!.carbsG} g",
                     icon: Icons.set_meal_outlined,
                   ),
                 ),
@@ -372,7 +376,7 @@ class _LogFoodState extends State<LogFood> {
                 Expanded(
                   child: _MacroTile(
                     label: "Proteins",
-                    value: "${food.nutrients!.proteinG}g",
+                    value: "${food.nutrients!.proteinG} g",
                     icon: Icons.restaurant_rounded,
                   ),
                 ),
@@ -380,7 +384,7 @@ class _LogFoodState extends State<LogFood> {
                 Expanded(
                   child: _MacroTile(
                     label: "Fats",
-                    value: "${food.nutrients!.fatsG}g",
+                    value: "${food.nutrients!.fatsG} g",
                     icon: Icons.opacity_outlined,
                   ),
                 ),
@@ -439,7 +443,7 @@ Widget _MacroTile({dynamic label, dynamic value, dynamic icon}) {
                 style: const TextStyle(
                   color: Color(0xFF6B7280),
                   fontWeight: FontWeight.w700,
-                  fontSize: 13,
+                  fontSize: 12,
                 ),
               ),
               const SizedBox(height: 8),
@@ -448,14 +452,14 @@ Widget _MacroTile({dynamic label, dynamic value, dynamic icon}) {
                 style: const TextStyle(
                   color: Color(0xFF111827),
                   fontWeight: FontWeight.w900,
-                  fontSize: 20,
+                  fontSize: 14,
                 ),
               ),
             ],
           ),
         ),
         const SizedBox(width: 10),
-        Icon(icon, size: 28, color: Color(0xFFB7E3BD)),
+        Icon(icon, color: primaryGreenDark),
       ],
     ),
   );
@@ -478,7 +482,7 @@ class _SearchBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 56,
+      height: 60,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -503,9 +507,9 @@ class _SearchBar extends StatelessWidget {
               decoration: InputDecoration(
                 hintText: "Search Here",
                 hintStyle: TextStyle(
-                  color: Color(0xFF9CA3AF),
-                  fontWeight: FontWeight.w600,
-                ),
+                    color: Color(0xFF9CA3AF),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14),
                 suffixIcon: controller.text.isEmpty
                     ? null
                     : IconButton(
@@ -576,8 +580,8 @@ class _CircleIconButton extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(999),
       child: Container(
-        width: 44,
-        height: 44,
+        width: 30,
+        height: 30,
         decoration: BoxDecoration(
           color: background,
           shape: BoxShape.circle,

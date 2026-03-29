@@ -243,20 +243,20 @@ class _OnBoardingScreenState extends State<OnBoardingScreen> {
                           const SizedBox(height: 10),
 
                           // Optional: back link (only when not first)
-                          if (_index > 0)
-                            TextButton(
-                              onPressed: () => _pageCtrl.previousPage(
-                                duration: const Duration(milliseconds: 240),
-                                curve: Curves.easeOut,
-                              ),
-                              style: TextButton.styleFrom(
-                                foregroundColor: textSecondary,
-                              ),
-                              child: const Text(
-                                "Back",
-                                style: TextStyle(fontWeight: FontWeight.w700),
-                              ),
-                            ),
+                          // if (_index > 0)
+                          //   TextButton(
+                          //     onPressed: () => _pageCtrl.previousPage(
+                          //       duration: const Duration(milliseconds: 240),
+                          //       curve: Curves.easeOut,
+                          //     ),
+                          //     style: TextButton.styleFrom(
+                          //       foregroundColor: textSecondary,
+                          //     ),
+                          //     child: const Text(
+                          //       "Back",
+                          //       style: TextStyle(fontWeight: FontWeight.w700),
+                          //     ),
+                          //   ),
                         ],
                       ),
                     ),
