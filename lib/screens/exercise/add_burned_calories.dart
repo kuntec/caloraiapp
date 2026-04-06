@@ -122,7 +122,7 @@ class _AddBurnedCaloriesScreenState extends State<AddBurnedCaloriesScreen> {
                     width: 140,
                     height: 140,
                     child: CustomPaint(
-                      painter: CalorieRingPainter(progress: 0.75),
+                      painter: CalorieRingPainter(progress: 0.50),
                       child: const Center(
                         child: Icon(
                           Icons.local_fire_department,

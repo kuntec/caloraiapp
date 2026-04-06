@@ -38,11 +38,29 @@ class _CreateFoodState extends State<CreateFood> {
   TextEditingController ironCtrl = TextEditingController();
 
   bool isLoading = false;
+
   @override
   Widget build(BuildContext context) {
+    const bg = Color(0xFFF7F7FB);
+    const card = Color(0xFFF3F2F8);
+    const ink = primaryOrangeDark;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: bg,
       // Your FAB + bottom nav remains in main scaffold
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        centerTitle: true,
+        title: const Text(
+          "Create Food",
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.w800,
+            fontSize: 16,
+          ),
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -50,34 +68,31 @@ class _CreateFoodState extends State<CreateFood> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ============= APP BAR ROW =============
-              Row(
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        color: Colors.grey.shade200,
-                      ),
-                      child: const Icon(Icons.arrow_back_ios_new, size: 18),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Text(
-                    "Create Food",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 25),
-
+              // Row(
+              //   children: [
+              //     GestureDetector(
+              //       onTap: () {
+              //         Navigator.pop(context);
+              //       },
+              //       child: Container(
+              //         padding: const EdgeInsets.all(8),
+              //         decoration: BoxDecoration(
+              //           borderRadius: BorderRadius.circular(12),
+              //           color: Colors.grey.shade200,
+              //         ),
+              //         child: const Icon(Icons.arrow_back_ios_new, size: 18),
+              //       ),
+              //     ),
+              //     const SizedBox(width: 12),
+              //     const Text(
+              //       "Create Food",
+              //       style: TextStyle(
+              //         fontSize: 18,
+              //         fontWeight: FontWeight.w700,
+              //       ),
+              //     ),
+              //   ],
+              // ),
               // ============= ADD IMAGE BOX =============
               // GestureDetector(
               //   onTap: () {
@@ -122,8 +137,6 @@ class _CreateFoodState extends State<CreateFood> {
               //     ),
               //   ),
               // ),
-
-              const SizedBox(height: 25),
 
               // ============= TITLE INPUT =============
               const _InputLabel(label: "Name"),

@@ -50,39 +50,72 @@ class _RunSetupScreenState extends State<RunSetupScreen> {
 
     return Scaffold(
       backgroundColor: bg,
+      appBar: AppBar(
+          elevation: 0,
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.white,
+          foregroundColor: ink,
+          centerTitle: true,
+          title: Container(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                    widget.title == "Run"
+                        ? Icons.directions_run
+                        : Icons.fitness_center,
+                    size: 18,
+                    color: ink),
+                const SizedBox(width: 8),
+                Text(
+                  widget.title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: ink,
+                  ),
+                ),
+              ],
+            ),
+          )),
       body: SafeArea(
         child: Column(
           children: [
             // Top bar
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
-              child: Row(
-                children: [
-                  _CircleIconButton(
-                    icon: Icons.arrow_back,
-                    onTap: () => Navigator.maybePop(context),
-                  ),
-                  const Spacer(),
-                  Row(
-                    children: [
-                      const Icon(Icons.directions_run, size: 18, color: ink),
-                      const SizedBox(width: 8),
-                      Text(
-                        widget.title,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: ink,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  const SizedBox(width: 44), // to balance the back button width
-                ],
-              ),
-            ),
-
+            // Padding(
+            //   padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+            //   child: Row(
+            //     children: [
+            //       _CircleIconButton(
+            //         icon: Icons.arrow_back,
+            //         onTap: () => Navigator.maybePop(context),
+            //       ),
+            //       const Spacer(),
+            //       Row(
+            //         children: [
+            //           Icon(
+            //               widget.title == "Run"
+            //                   ? Icons.directions_run
+            //                   : Icons.fitness_center,
+            //               size: 18,
+            //               color: ink),
+            //           const SizedBox(width: 8),
+            //           Text(
+            //             widget.title,
+            //             style: const TextStyle(
+            //               fontSize: 18,
+            //               fontWeight: FontWeight.w700,
+            //               color: ink,
+            //             ),
+            //           ),
+            //         ],
+            //       ),
+            //       const Spacer(),
+            //       const SizedBox(width: 44), // to balance the back button width
+            //     ],
+            //   ),
+            // ),
+            const SizedBox(height: 20),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(18, 10, 18, 16),
@@ -122,23 +155,27 @@ class _RunSetupScreenState extends State<RunSetupScreen> {
                               children: [
                                 _IntensityLine(
                                   title: "High",
-                                  subtitle:
-                                      "Sprinting – 14 mph (4 minute miles)",
+                                  subtitle: widget.title == "Run"
+                                      ? "Sprinting – 14 mph (4 minute miles)"
+                                      : "Training to failure, breathing heavily",
                                   dim: intensityIndex != 2,
                                   emphasize: intensityIndex == 2,
                                 ),
                                 const SizedBox(height: 14),
                                 _IntensityLine(
                                   title: "Medium",
-                                  subtitle: "Jogging – 6 mph (10 minute miles)",
+                                  subtitle: widget.title == "Run"
+                                      ? "Jogging – 6 mph (10 minute miles)"
+                                      : "Breaking a sweat, many reps",
                                   dim: intensityIndex != 1,
                                   emphasize: intensityIndex == 1,
                                 ),
                                 const SizedBox(height: 14),
                                 _IntensityLine(
                                   title: "Low",
-                                  subtitle:
-                                      "Chill walk – 3 mph (20 minute miles)",
+                                  subtitle: widget.title == "Run"
+                                      ? "Chill walk – 3 mph (20 minute miles)"
+                                      : "Not breaking a sweat, giving little effort",
                                   dim: intensityIndex != 0,
                                   emphasize: intensityIndex == 0,
                                 ),

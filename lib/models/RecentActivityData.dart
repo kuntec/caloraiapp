@@ -26,6 +26,9 @@ class RecentActivityData {
   dynamic _date;
   List<Activities>? _activities;
   Counts? _counts;
+  dynamic _status;
+  dynamic _message;
+
   RecentActivityData copyWith({
     dynamic date,
     List<Activities>? activities,

@@ -49,6 +49,11 @@
 	<key>NSHealthShareUsageDescription</key>
     <string>This app reads your step count data from Apple Health to track your daily activity and progress.</string>
 
+    <key>NSCameraUsageDescription</key>
+    <string>This app needs camera access to scan food images.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>This app needs photo library access to choose food images.</string>
+
 	<key>CFBundleURLTypes</key>
     <array>
       <dict>

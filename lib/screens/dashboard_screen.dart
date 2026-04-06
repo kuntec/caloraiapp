@@ -8,8 +8,10 @@ import 'package:calorai/screens/add_custom_meal.dart';
 import 'package:calorai/screens/ai_detection_result_screen.dart';
 import 'package:calorai/screens/challenges_screen.dart';
 import 'package:calorai/screens/connect_health_screen.dart';
+import 'package:calorai/screens/food-scan/screens/food_scan_home_screen.dart';
 import 'package:calorai/screens/food/food_logging_screen.dart';
 import 'package:calorai/screens/exercise/log_exercise.dart';
+import 'package:calorai/screens/meal_plan/screens/meal_plan_home_screen.dart';
 import 'package:calorai/screens/profile_screen.dart';
 import 'package:calorai/services/steps_service.dart';
 import 'package:calorai/widgets/HorizontalDatePicker.dart';
@@ -110,6 +112,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     SharedPreferences preferences = await SharedPreferences.getInstance();
     String token = preferences.getString("token").toString();
     DailyMetricsData metricsData = await apiCall.getDailyMetricsToday(token);
+    if (metricsData.status == false) {
+      print("NO TOKEN");
+      MyUtility.logout(context);
+    }
     print(metricsData.metrics!.userId);
     setState(() {
       metrics = metricsData.metrics;
@@ -239,6 +245,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
 
                           const SizedBox(height: 25),
+
+                          // ElevatedButton(
+                          //     onPressed: () async {
+                          //       SharedPreferences preferences =
+                          //           await SharedPreferences.getInstance();
+                          //       String id =
+                          //           preferences.getString("id").toString();
+                          //       print("ID = $id");
+                          //       Navigator.push(
+                          //         context,
+                          //         MaterialPageRoute(
+                          //           builder: (_) =>
+                          //               MealPlanHomeScreen(userId: id),
+                          //         ),
+                          //       );
+                          //     },
+                          //     child: Container(
+                          //       child: Text("AI Meal Plan"),
+                          //     )),
+                          //
+                          // ElevatedButton(
+                          //     onPressed: () async {
+                          //       SharedPreferences preferences =
+                          //           await SharedPreferences.getInstance();
+                          //       String id =
+                          //           preferences.getString("id").toString();
+                          //       print("ID = $id");
+                          //       Navigator.push(
+                          //         context,
+                          //         MaterialPageRoute(
+                          //           builder: (_) =>
+                          //               FoodScanHomeScreen(userId: id),
+                          //         ),
+                          //       );
+                          //     },
+                          //     child: Container(
+                          //       child: Text("Scan Food"),
+                          //     )),
 
                           //Water intake system
                           WaterIntakeWidget(
@@ -497,6 +541,15 @@ class _DashboardHeader extends StatelessWidget {
                   //   child:
                   //       const Icon(Icons.camera_alt, color: primaryOrangeDark),
                   // ),
+                  InkWell(
+                    onTap: () {
+                      MyUtility.changePage(context, ProfileScreen());
+                    },
+                    child: CircleAvatar(
+                      radius: 25,
+                      backgroundImage: AssetImage("assets/images/logo.jpg"),
+                    ),
+                  ),
                   const SizedBox(width: 10),
                   RichText(
                     text: TextSpan(
@@ -523,7 +576,7 @@ class _DashboardHeader extends StatelessWidget {
                       MyUtility.changePage(context, ProfileScreen());
                     },
                     child: CircleAvatar(
-                      radius: 20,
+                      radius: 25,
                       backgroundImage: NetworkImage(
                         FirebaseAuth.instance.currentUser!.photoURL.toString(),
                       ),

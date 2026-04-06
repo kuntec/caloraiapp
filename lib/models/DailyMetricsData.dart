@@ -2,29 +2,46 @@
 
 class DailyMetricsData {
   DailyMetricsData({
+    dynamic status,
+    dynamic message,
     Metrics? metrics,
   }) {
+    _status = status;
+    _message = message;
     _metrics = metrics;
   }
 
   DailyMetricsData.fromJson(dynamic json) {
+    _status = json['status'];
+    _message = json['message'];
     _metrics =
         json['metrics'] != null ? Metrics.fromJson(json['metrics']) : null;
   }
   Metrics? _metrics;
+  dynamic _status;
+  dynamic _message;
+
   DailyMetricsData copyWith({
+    dynamic status,
+    dynamic message,
     Metrics? metrics,
   }) =>
       DailyMetricsData(
+        status: status ?? _status,
+        message: message ?? _message,
         metrics: metrics ?? _metrics,
       );
   Metrics? get metrics => _metrics;
+  dynamic get status => _status;
+  dynamic get message => _message;
 
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{};
     if (_metrics != null) {
       map['metrics'] = _metrics?.toJson();
     }
+    map['status'] = _status;
+    map['message'] = _message;
     return map;
   }
 }

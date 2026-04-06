@@ -63,16 +63,20 @@ class ApiCall {
   Future<DailyMetricsData> getDailyMetricsToday(String token) async {
     Uri uri = Uri.parse(APIResource.DAILY_METRICS_TODAY);
     HttpCall call = HttpCall();
-
-    http.Response response = await call.get(
-      uri,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-    );
-    print("DailyMetricsData ${response.body}");
-    return DailyMetricsData.fromJson(jsonDecode(response.body));
+    try {
+      http.Response response = await call.get(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+      print("DailyMetricsData ${response.body}");
+      return DailyMetricsData.fromJson(jsonDecode(response.body));
+    } catch (e) {
+      print("Error: $e");
+      return DailyMetricsData.fromJson({"status": false});
+    }
   }
 
   Future<DailyMetricsData> getDailyMetricsDate(

@@ -15,4 +15,8 @@ class APIResource {
   static const String DELETE_FOOD_LOG = "${BASE_URL}food-logs/";
   static const String DELETE_EXERCISE_LOG = "${BASE_URL}exercises/";
   static const String STREAK_SUMMARY = "${BASE_URL}streaks/summary";
+
+  static const String ADD_MEAL_PROFILE = "${BASE_URL}meal-plan/profile";
+  static const String GENERATE_MEAL_PLAN = "${BASE_URL}meal-plan/generate";
+  static const String ALL_MEAL_PLANS = "${BASE_URL}meal-plan/plans";
 }

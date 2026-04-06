@@ -1,6 +1,8 @@
 import 'package:calorai/constants/constants.dart';
+import 'package:calorai/screens/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MyUtility {
   static changePage(dynamic context, dynamic page) async {
@@ -205,5 +207,12 @@ class MyUtility {
         ),
       ),
     );
+  }
+
+  static logout(context) async {
+    // TODO: clear token/session + navigate to auth screen
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    preferences.clear();
+    MyUtility.removePage(context, SplashScreen());
   }
 }

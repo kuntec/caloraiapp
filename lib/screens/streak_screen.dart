@@ -38,8 +38,11 @@ class _StreakScreenState extends State<StreakScreen> {
 
   @override
   Widget build(BuildContext context) {
+    const bg = Color(0xFFF7F7FB);
+    const card = Color(0xFFF3F2F8);
+    const ink = primaryOrangeDark;
     return Scaffold(
-      //backgroundColor: Colors.white,
+      backgroundColor: bg,
 //      appBar: AppBar(title: const Text("CALOR AI")),
       appBar: AppBar(
         elevation: 0,
