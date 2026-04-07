@@ -1,3 +1,4 @@
+import 'package:calorai/constants/constants.dart';
 import 'package:flutter/material.dart';
 
 class ScanSummaryCard extends StatelessWidget {
@@ -40,8 +41,9 @@ class ScanSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+    return Container(
+      decoration: kContainerBox,
+      // shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
         child: Row(

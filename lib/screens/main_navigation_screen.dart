@@ -4,10 +4,12 @@ import 'package:calorai/screens/add_custom_meal.dart';
 import 'package:calorai/screens/ai_detection_result_screen.dart';
 import 'package:calorai/screens/dashboard_screen.dart';
 import 'package:calorai/screens/exercise/log_exercise.dart';
+import 'package:calorai/screens/food-scan/screens/food_scan_home_screen.dart';
 import 'package:calorai/screens/food/log_food.dart';
 import 'package:calorai/screens/food/food_logging_screen.dart';
 import 'package:calorai/screens/streak_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -104,8 +106,17 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         ],
       ),
       floatingActionButton: InkWell(
-        onTap: () {
-          MyUtility.changePage(context, AiDetectionResultScreen());
+        onTap: () async {
+          SharedPreferences preferences = await SharedPreferences.getInstance();
+          String id = preferences.getString("id").toString();
+          print("ID = $id");
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => FoodScanHomeScreen(userId: id),
+            ),
+          );
+          //MyUtility.changePage(context, AiDetectionResultScreen());
         },
         child: Container(
           height: 70,

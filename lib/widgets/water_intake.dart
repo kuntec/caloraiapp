@@ -1,5 +1,8 @@
 import 'package:calorai/api/api_call.dart';
 import 'package:calorai/constants/constants.dart';
+import 'package:calorai/constants/utility.dart';
+import 'package:calorai/widgets/gradient_button.dart';
+import 'package:calorai/widgets/input_field.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -19,12 +22,21 @@ class WaterIntakeWidget extends StatefulWidget {
 
 class _WaterIntakeWidgetState extends State<WaterIntakeWidget> {
   int currentIntake = 0;
+  int waterCup = kWaterCup;
   bool isLoading = false;
+  TextEditingController _waterController = TextEditingController();
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     currentIntake = widget.total;
+  }
+
+  void setWaterCup() async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    setState(() {
+      waterCup = int.parse(preferences.getString("waterCup").toString());
+    });
   }
 
   @override
@@ -66,7 +78,6 @@ class _WaterIntakeWidgetState extends State<WaterIntakeWidget> {
                 if (currentIntake == 0) {
                   return;
                 }
-
                 setState(() {
                   currentIntake -= kWaterCup;
                 });
@@ -77,6 +88,10 @@ class _WaterIntakeWidgetState extends State<WaterIntakeWidget> {
             ),
             IconButton(
               onPressed: () {
+                // if (currentIntake >= widget.goal) {
+                //   MyUtility.myToast("Goal Done");
+                //   return;
+                // }
                 setState(() {
                   currentIntake += kWaterCup;
                 });
@@ -86,7 +101,94 @@ class _WaterIntakeWidgetState extends State<WaterIntakeWidget> {
               iconSize: 40,
             ),
           ],
-        )
+        ),
+        // IconButton(
+        //   onPressed: () {
+        //     showModalBottomSheet(
+        //         context: context,
+        //         builder: (_) {
+        //           return SafeArea(
+        //               child: Column(children: [
+        //             Row(
+        //               mainAxisAlignment: MainAxisAlignment.spaceAround,
+        //               children: [
+        //                 IconButton(
+        //                   onPressed: () {
+        //                     Navigator.pop(context);
+        //                   },
+        //                   icon: Icon(
+        //                     size: 40,
+        //                     Icons.cancel,
+        //                     color: Colors.grey,
+        //                   ),
+        //                 ),
+        //                 Text(
+        //                   "Watter Settings",
+        //                   style: TextStyle(
+        //                     color: Colors.black,
+        //                     fontWeight: FontWeight.bold,
+        //                   ),
+        //                 ),
+        //                 IconButton(
+        //                   onPressed: () {
+        //                     Navigator.pop(context);
+        //                   },
+        //                   icon: Icon(
+        //                     size: 40,
+        //                     Icons.water_drop,
+        //                     color: primaryOrangeDark,
+        //                   ),
+        //                 ),
+        //               ],
+        //             ),
+        //             Container(
+        //               margin: EdgeInsets.all(20),
+        //               child: Column(
+        //                 children: [
+        //                   InputField(
+        //                       controller: _waterController,
+        //                       hintText: "Water Intake ML",
+        //                       prefixIcon: Icons.water_drop),
+        //                   SizedBox(height: 30),
+        //                   GradientButton(
+        //                     text: "ADD",
+        //                     onPressed: () {},
+        //                     gradient: const LinearGradient(
+        //                       colors: [primaryOrangeDark, primaryOrangeLight],
+        //                       begin: Alignment.bottomCenter,
+        //                       end: Alignment.topCenter,
+        //                     ),
+        //                   )
+        //                 ],
+        //               ),
+        //             ),
+        //             Container(
+        //               margin: EdgeInsets.all(10),
+        //               padding: EdgeInsets.all(10),
+        //               decoration: kContainerBox,
+        //               alignment: Alignment.center,
+        //               child: Column(
+        //                 children: [
+        //                   Text(
+        //                     "How much water do you need to stay hydrated?",
+        //                     style: TextStyle(
+        //                         fontWeight: FontWeight.bold, fontSize: 16),
+        //                   ),
+        //                   SizedBox(height: 20),
+        //                   Text(
+        //                     "The National Academies of Sciences, Engineering, and Medicine note that women should consume about 2.7 liters of water per day, while men should consume about 3.7 liters per day. That's about 11.5 cups a day for women and 15.5 cups a day for men. This includes water from both foods and drinks.",
+        //                     style: TextStyle(
+        //                         fontWeight: FontWeight.normal, fontSize: 12),
+        //                   ),
+        //                 ],
+        //               ),
+        //             )
+        //           ]));
+        //         });
+        //   },
+        //   icon: Icon(Icons.settings),
+        //   iconSize: 30,
+        // ),
       ]),
     );
   }

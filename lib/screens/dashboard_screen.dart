@@ -11,10 +11,12 @@ import 'package:calorai/screens/connect_health_screen.dart';
 import 'package:calorai/screens/food-scan/screens/food_scan_home_screen.dart';
 import 'package:calorai/screens/food/food_logging_screen.dart';
 import 'package:calorai/screens/exercise/log_exercise.dart';
+import 'package:calorai/screens/meal_plan/screens/ai_meal_plan_screen.dart';
 import 'package:calorai/screens/meal_plan/screens/meal_plan_home_screen.dart';
 import 'package:calorai/screens/profile_screen.dart';
 import 'package:calorai/services/steps_service.dart';
 import 'package:calorai/widgets/HorizontalDatePicker.dart';
+import 'package:calorai/widgets/meal_plan_card.dart';
 import 'package:calorai/widgets/water_intake.dart';
 import 'package:calorai/widgets/workout_history_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -244,7 +246,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ],
                           ),
 
-                          const SizedBox(height: 25),
+                          MealPlanCard(
+                            onTap: () async {
+                              SharedPreferences preferences =
+                                  await SharedPreferences.getInstance();
+                              String id =
+                                  preferences.getString("id").toString();
+                              print("ID = $id");
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      MealPlanHomeScreen(userId: id),
+                                ),
+                              );
+                              // Navigator.push(
+                              //   context,
+                              //   MaterialPageRoute(
+                              //     builder: (_) => AiMealPlanScreen(
+                              //       onGenerateTap: () {},
+                              //       onHistoryTap: () {},
+                              //       onEditProfileTap: () {},
+                              //     ),
+                              //   ),
+                              // );
+                            },
+                          ),
+
+                          //const SizedBox(height: 25),
 
                           // ElevatedButton(
                           //     onPressed: () async {
@@ -264,7 +293,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           //     child: Container(
                           //       child: Text("AI Meal Plan"),
                           //     )),
-                          //
+
                           // ElevatedButton(
                           //     onPressed: () async {
                           //       SharedPreferences preferences =
@@ -678,8 +707,8 @@ class _StatCard extends StatelessWidget {
           Container(
             decoration:
                 BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-            width: 60,
-            height: 60,
+            width: 50,
+            height: 50,
             child: Center(
               child: Icon(
                 icon,

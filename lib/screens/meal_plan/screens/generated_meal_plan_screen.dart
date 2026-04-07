@@ -1,3 +1,4 @@
+import 'package:calorai/constants/constants.dart';
 import 'package:flutter/material.dart';
 import '../models/meal_plan_model.dart';
 import '../widgets/meal_card.dart';
@@ -10,9 +11,23 @@ class GeneratedMealPlanScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const bg = Color(0xFFF7F7FB);
+
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
-        title: const Text("Your Meal Plan"),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        foregroundColor: primaryOrangeDark,
+        centerTitle: true,
+        title: const Text(
+          "Your Meal Plan",
+          style: TextStyle(
+              color: primaryOrangeDark,
+              fontWeight: FontWeight.w800,
+              fontSize: 14),
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),

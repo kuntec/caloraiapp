@@ -1,3 +1,4 @@
+import 'package:calorai/constants/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -57,7 +58,17 @@ class _HorizontaldatepickerState extends State<Horizontaldatepicker> {
               width: 60,
               margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
               decoration: BoxDecoration(
-                color: isSelected ? Colors.blue : Colors.grey.shade200,
+                // gradient: isSelected
+                //     ? const LinearGradient(
+                //         colors: [
+                //           Color(0xFFFF8A00), // light orange
+                //           Color(0xFFFF5C00), // main orange
+                //         ],
+                //         begin: Alignment.topLeft,
+                //         end: Alignment.bottomRight,
+                //       )
+                //     : null,
+                color: isSelected ? primaryGreenDark : Colors.white,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Column(
@@ -68,6 +79,7 @@ class _HorizontaldatepickerState extends State<Horizontaldatepicker> {
                     style: TextStyle(
                       color: isSelected ? Colors.white : Colors.black54,
                       fontSize: 12,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 4),

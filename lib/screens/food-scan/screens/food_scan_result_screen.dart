@@ -1,3 +1,4 @@
+import 'package:calorai/constants/constants.dart';
 import 'package:flutter/material.dart';
 import '../models/food_scan_model.dart';
 import '../services/food_scan_service.dart';
@@ -124,17 +125,38 @@ class _FoodScanResultScreenState extends State<FoodScanResultScreen> {
 
   @override
   Widget build(BuildContext context) {
+    const bg = Color(0xFFF7F7FB);
+    const card = Color(0xFFF3F2F8);
+    const ink = primaryOrangeDark;
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
-        title: const Text("Scan Result"),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        foregroundColor: ink,
+        centerTitle: true,
+        title: const Text(
+          "Food Scan Result",
+          style: TextStyle(
+              color: primaryOrangeDark,
+              fontWeight: FontWeight.w800,
+              fontSize: 14),
+        ),
         actions: [
           IconButton(
-            onPressed: deleting ? null : _deleteScan,
+            //onPressed: deleting ? null : _deleteScan,
+            onPressed: () {
+              _showDeleteDialog(context);
+            },
             icon: deleting
                 ? const SizedBox(
                     width: 18,
                     height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: primaryOrangeDark,
+                    ),
                   )
                 : const Icon(Icons.delete_outline),
           )
@@ -174,7 +196,7 @@ class _FoodScanResultScreenState extends State<FoodScanResultScreen> {
           const Text(
             "Detected Foods",
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -183,6 +205,7 @@ class _FoodScanResultScreenState extends State<FoodScanResultScreen> {
           if (scan.notes.isNotEmpty) ...[
             const SizedBox(height: 8),
             Card(
+              color: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(18),
               ),
@@ -197,6 +220,9 @@ class _FoodScanResultScreenState extends State<FoodScanResultScreen> {
             children: [
               Expanded(
                 child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: primaryOrangeDark),
+                  ),
                   onPressed:
                       scan.isConfirmed || confirming ? null : _confirmScan,
                   child: confirming
@@ -205,12 +231,17 @@ class _FoodScanResultScreenState extends State<FoodScanResultScreen> {
                           width: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text("Confirm"),
+                      : const Text("Confirm",
+                          style: TextStyle(
+                              fontSize: 16, color: primaryOrangeDark)),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryOrangeDark,
+                  ),
                   onPressed: adding ? null : _addToLog,
                   child: adding
                       ? const SizedBox(
@@ -218,13 +249,50 @@ class _FoodScanResultScreenState extends State<FoodScanResultScreen> {
                           width: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text("Add to Log"),
+                      : const Text("Add to Log",
+                          style: TextStyle(fontSize: 16, color: Colors.white)),
                 ),
               ),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _showDeleteDialog(BuildContext context) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // User must tap button to dismiss
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm Delete'),
+          content: const SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('Are you sure you want to delete this item?'),
+                Text('This action cannot be undone.'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Dismiss without action
+              },
+            ),
+            TextButton(
+              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+              onPressed: () {
+                _deleteScan();
+                // TODO: Add your delete logic here
+                Navigator.of(context).pop(); // Dismiss and proceed
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

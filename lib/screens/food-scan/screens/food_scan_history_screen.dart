@@ -1,3 +1,4 @@
+import 'package:calorai/constants/constants.dart';
 import 'package:flutter/material.dart';
 import '../models/food_scan_model.dart';
 import '../services/food_scan_service.dart';
@@ -42,9 +43,24 @@ class _FoodScanHistoryScreenState extends State<FoodScanHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    const bg = Color(0xFFF7F7FB);
+    const card = Color(0xFFF3F2F8);
+    const ink = primaryOrangeDark;
     return Scaffold(
+      backgroundColor: bg,
       appBar: AppBar(
-        title: const Text("Food Scan History"),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        foregroundColor: ink,
+        centerTitle: true,
+        title: const Text(
+          "Food Scan History",
+          style: TextStyle(
+              color: primaryOrangeDark,
+              fontWeight: FontWeight.w800,
+              fontSize: 14),
+        ),
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -55,7 +71,8 @@ class _FoodScanHistoryScreenState extends State<FoodScanHistoryScreen> {
                   itemCount: scans.length,
                   itemBuilder: (context, index) {
                     final scan = scans[index];
-                    return Card(
+                    return Container(
+                      decoration: kContainerBox,
                       margin: const EdgeInsets.only(bottom: 12),
                       child: ListTile(
                         leading: scan.imageUrl.isNotEmpty

@@ -81,7 +81,21 @@ class _AddBurnedCaloriesScreenState extends State<AddBurnedCaloriesScreen> {
     const ink = primaryOrangeDark;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF6F7FB),
+      appBar: AppBar(
+        backgroundColor: bg,
+        foregroundColor: primaryOrangeDark,
+        elevation: 0,
+        title: const Text(
+          "Add Burned Calories",
+          style: TextStyle(
+              color: primaryOrangeDark,
+              fontWeight: FontWeight.w800,
+              fontSize: 14),
+        ),
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: primaryOrangeDark),
+      ),
       body: SafeArea(
         child: isLoading
             ? Center(
@@ -91,29 +105,29 @@ class _AddBurnedCaloriesScreenState extends State<AddBurnedCaloriesScreen> {
             : Column(
                 children: [
                   // App bar
-                  Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Row(
-                      children: [
-                        _CircleButton(
-                          icon: Icons.arrow_back,
-                          onTap: () => Navigator.pop(context),
-                        ),
-                        const Spacer(),
-                        const Text(
-                          "Add Burned Calories",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: ink,
-                          ),
-                        ),
-                        const Spacer(),
-                        const SizedBox(width: 44),
-                      ],
-                    ),
-                  ),
+                  // Padding(
+                  //   padding:
+                  //       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  //   child: Row(
+                  //     children: [
+                  //       _CircleButton(
+                  //         icon: Icons.arrow_back,
+                  //         onTap: () => Navigator.pop(context),
+                  //       ),
+                  //       const Spacer(),
+                  //       const Text(
+                  //         "Add Burned Calories",
+                  //         style: TextStyle(
+                  //           fontSize: 18,
+                  //           fontWeight: FontWeight.w700,
+                  //           color: ink,
+                  //         ),
+                  //       ),
+                  //       const Spacer(),
+                  //       const SizedBox(width: 44),
+                  //     ],
+                  //   ),
+                  // ),
 
                   const Spacer(),
 

@@ -49,7 +49,7 @@ class _RunSetupScreenState extends State<RunSetupScreen> {
     const ink = primaryOrangeDark;
 
     return Scaffold(
-      backgroundColor: bg,
+      backgroundColor: const Color(0xFFF6F7FB),
       appBar: AppBar(
           elevation: 0,
           backgroundColor: Colors.white,
