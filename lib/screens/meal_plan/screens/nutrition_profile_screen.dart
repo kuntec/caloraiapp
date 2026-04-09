@@ -60,7 +60,7 @@ class _NutritionProfileScreenState extends State<NutritionProfileScreen> {
     print(gender);
     print(activityLevel);
     print(goal);
-    print(dietType);
+    print(dietType.toLowerCase());
     print(halalRequired);
     print(mealsPerDay);
     print(cuisineController.text.toLowerCase());
@@ -68,7 +68,7 @@ class _NutritionProfileScreenState extends State<NutritionProfileScreen> {
     print(excludedFoodsController.text.toLowerCase());
     print(notesController.text);
 
-    if (!_formKey.currentState!.validate()) return;
+//    if (!_formKey.currentState!.validate()) return;
 
     setState(() => isLoading = true);
 
@@ -83,8 +83,8 @@ class _NutritionProfileScreenState extends State<NutritionProfileScreen> {
             ? double.parse(targetWeightController.text.trim())
             : null,
         activityLevel: activityLevel,
-        goal: goal,
-        dietType: dietType,
+        goal: goal.toLowerCase(),
+        dietType: dietType.toLowerCase(),
         halalRequired: halalRequired,
         mealsPerDay: mealsPerDay,
         cuisinePreference: _splitComma(cuisineController.text),
@@ -294,7 +294,7 @@ class _NutritionProfileScreenState extends State<NutritionProfileScreen> {
                               const SizedBox(height: 12),
                               InputField(
                                 keyboardType: TextInputType.number,
-                                controller: ageController,
+                                controller: targetWeightController,
                                 hintText: "Target Weight (optional)",
                                 prefixIcon: Icons.monitor_weight_outlined,
                               ),
@@ -324,9 +324,8 @@ class _NutritionProfileScreenState extends State<NutritionProfileScreen> {
                                 items: const [
                                   'weight_loss',
                                   'muscle_gain',
-                                  'maintenance',
-                                  'keto',
-                                  'intermittent_fasting'
+                                  'maintain',
+                                  'weight_gain',
                                 ],
                                 onChanged: (v) => setState(() => goal = v),
                               ),
@@ -360,21 +359,21 @@ class _NutritionProfileScreenState extends State<NutritionProfileScreen> {
                                 children: [
                                   _Chip(
                                     text: "Veg",
-                                    selected: dietType == "Veg",
+                                    selected: dietType == "veg",
                                     onTap: () =>
-                                        setState(() => dietType = "Veg"),
+                                        setState(() => dietType = "veg"),
                                   ),
                                   _Chip(
                                     text: "Non-Veg",
-                                    selected: dietType == "Non-Veg",
+                                    selected: dietType == "non_veg",
                                     onTap: () =>
-                                        setState(() => dietType = "Non-Veg"),
+                                        setState(() => dietType = "non_veg"),
                                   ),
                                   _Chip(
                                     text: "Keto",
-                                    selected: dietType == "Keto",
+                                    selected: dietType == "keto",
                                     onTap: () =>
-                                        setState(() => dietType = "Keto"),
+                                        setState(() => dietType = "keto"),
                                   ),
                                 ],
                               ),
