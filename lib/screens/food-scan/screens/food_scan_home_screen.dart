@@ -3,6 +3,7 @@ import 'package:calorai/constants/constants.dart';
 import 'package:calorai/widgets/gradient_button.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../services/food_scan_service.dart';
 import 'food_scan_history_screen.dart';
 import 'food_scan_result_screen.dart';
@@ -22,7 +23,59 @@ class _FoodScanHomeScreenState extends State<FoodScanHomeScreen> {
 
   bool isLoading = false;
 
+  /// Shows a dialog explaining why camera access is needed with an
+  /// "Open Settings" button so the user can grant the permission themselves.
+  Future<void> _showCameraPermissionDialog() async {
+    if (!mounted) return;
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Camera Access Required'),
+        content: const Text(
+          'CalorAI needs camera access to scan your food and estimate nutrition.\n\n'
+          'Please go to Settings → CalorAI → Camera and enable access.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Not Now'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              openAppSettings();
+            },
+            style: TextButton.styleFrom(foregroundColor: primaryOrangeDark),
+            child: const Text('Open Settings'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _pickAndAnalyze(ImageSource source) async {
+    // For camera source, verify permission before launching the picker.
+    if (source == ImageSource.camera) {
+      final status = await Permission.camera.status;
+
+      if (status.isPermanentlyDenied) {
+        // User previously denied and ticked "Don't ask again" — must go to Settings.
+        await _showCameraPermissionDialog();
+        return;
+      }
+
+      if (status.isDenied) {
+        // Not yet decided — request it.
+        final result = await Permission.camera.request();
+        if (!result.isGranted) {
+          if (result.isPermanentlyDenied && mounted) {
+            await _showCameraPermissionDialog();
+          }
+          return;
+        }
+      }
+    }
+
     try {
       final picked = await picker.pickImage(
         source: source,
@@ -51,8 +104,13 @@ class _FoodScanHomeScreenState extends State<FoodScanHomeScreen> {
       );
     } catch (e) {
       if (!mounted) return;
+      // Show a friendly message instead of a raw exception string.
+      final msg = e.toString().toLowerCase();
+      final friendly = msg.contains('permission') || msg.contains('denied')
+          ? 'Camera access was denied. Please enable it in Settings.'
+          : 'Could not process the image. Please try again.';
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
+        SnackBar(content: Text(friendly)),
       );
     } finally {
       if (mounted) setState(() => isLoading = false);

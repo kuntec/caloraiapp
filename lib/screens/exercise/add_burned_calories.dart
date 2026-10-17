@@ -2,7 +2,6 @@ import 'package:calorai/api/api_call.dart';
 import 'package:calorai/components/CalorieRing.dart';
 import 'package:calorai/constants/constants.dart';
 import 'package:calorai/constants/utility.dart';
-import 'package:calorai/screens/dashboard_screen.dart';
 import 'package:calorai/screens/main_navigation_screen.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
@@ -36,9 +35,12 @@ class _AddBurnedCaloriesScreenState extends State<AddBurnedCaloriesScreen> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     calories = widget.caloriesBurned;
+    // Auto-open the edit dialog for Manual exercise (starts at 0)
+    if (calories == 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _editCalories());
+    }
   }
 
   void _editCalories() async {
@@ -203,7 +205,12 @@ class _AddBurnedCaloriesScreenState extends State<AddBurnedCaloriesScreen> {
                           elevation: 0,
                         ),
                         onPressed: () {
-                          //debugPrint("Logged $calories calories");
+                          if (calories <= 0) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("Please enter the calories you burned.")),
+                            );
+                            return;
+                          }
                           addExerciseLog();
                         },
                         child: const Text(
@@ -226,28 +233,40 @@ class _AddBurnedCaloriesScreenState extends State<AddBurnedCaloriesScreen> {
     setState(() {
       isLoading = true;
     });
-    ApiCall call = new ApiCall();
-    SharedPreferences preferences = await SharedPreferences.getInstance();
-    String token = preferences.getString("token") ?? "";
-    DateTime now = DateTime.now();
+    try {
+      ApiCall call = ApiCall();
+      SharedPreferences preferences = await SharedPreferences.getInstance();
+      String token = preferences.getString("token") ?? "";
+      DateTime now = DateTime.now();
 
-// Format date → "2026-02-18"
-    String date = DateFormat('yyyy-MM-dd').format(now);
-// Format time → "02:00 PM"
-    String time = DateFormat('hh:mm a').format(now);
-    String type = widget.type;
-    String name = widget.name;
-    String intensity = widget.intensity;
-    int durationMinutes = widget.durationMinutes;
-    int caloriesBurned = calories;
-    String source = "manual";
-    call.addExerciseLog(date, time, type, name, intensity, durationMinutes,
-        caloriesBurned, source, token);
+      String date = DateFormat('yyyy-MM-dd').format(now);
+      String time = DateFormat('hh:mm a').format(now);
 
-    setState(() {
-      isLoading = false;
-    });
-    MyUtility.removePage(context, MainNavigationScreen());
+      // Await the API call so the exercise is saved before the dashboard
+      // reloads its activity list — without await, the dashboard fetches
+      // before the record exists in the DB and the exercise never appears.
+      await call.addExerciseLog(
+        date,
+        time,
+        widget.type,
+        widget.name,
+        widget.intensity,
+        widget.durationMinutes,
+        calories,
+        "manual",
+        token,
+      );
+
+      if (!mounted) return;
+      MyUtility.removePage(context, MainNavigationScreen());
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to log exercise. Please try again.")),
+      );
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
   }
 }
 

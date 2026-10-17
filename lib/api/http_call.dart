@@ -82,9 +82,9 @@ class HttpCall {
 
   /// ✅ Log API responses (for debugging)
   void _logResponse(String method, Uri uri, http.Response response) {
-    print('[$method] ${uri.toString()} → ${response.statusCode}');
+    // print('[$method] ${uri.toString()} → ${response.statusCode}');
     if (response.statusCode >= 400) {
-      print('Response body: ${response.body}');
+      // print('Response body: ${response.body}');
     }
   }
 

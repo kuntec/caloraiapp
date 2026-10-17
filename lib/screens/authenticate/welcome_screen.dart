@@ -15,7 +15,7 @@ class WelcomeScreen extends StatelessWidget {
             children: [
               const Spacer(),
               Image.asset(
-                'assets/images/logo.jpg',
+                'assets/images/logo.png',
                 height: 150,
               ),
               const SizedBox(height: 20),

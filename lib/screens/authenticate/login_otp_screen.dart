@@ -26,7 +26,7 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> {
         verificationId = verId;
       },
       verificationFailed: (e) {
-        print(e.message);
+        // print(e.message);
       },
       verificationCompleted: (credential) async {
         await FirebaseAuth.instance.signInWithCredential(credential);
@@ -46,7 +46,7 @@ class _LoginOtpScreenState extends State<LoginOtpScreen> {
       smsCode: _otpController.text.trim(),
     );
     if (!mounted) return;
-    print(userCredential.user!.phoneNumber);
+    // print(userCredential.user!.phoneNumber);
     setState(() {
       isOTPSent = false;
     });

@@ -163,12 +163,63 @@ class _ConnectHealthScreenState extends State<ConnectHealthScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isIOS = Platform.isIOS;
+    final String platformName = isIOS ? 'Apple Health' : 'Google Health Connect';
+    final IconData platformIcon =
+        isIOS ? Icons.favorite_rounded : Icons.health_and_safety;
+    final Color platformColor = isIOS ? const Color(0xFFFF2D55) : const Color(0xFF4285F4);
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Connect to Google Health")),
+      appBar: AppBar(
+        title: Text("Connect to $platformName"),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Platform badge — clearly identifies HealthKit / Health Connect
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: platformColor.withOpacity(0.08),
+                border: Border.all(color: platformColor.withOpacity(0.3)),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(
+                children: [
+                  Icon(platformIcon, color: platformColor, size: 28),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isIOS ? 'Apple Health (HealthKit)' : 'Google Health Connect',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: platformColor,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          isIOS
+                              ? 'CalorAI reads your steps and activity via HealthKit, and writes nutrition data back to Apple Health.'
+                              : 'CalorAI reads your steps and activity via Health Connect.',
+                          style: const TextStyle(fontSize: 12, color: Colors.black54),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Status & steps card
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(14),
@@ -181,23 +232,28 @@ class _ConnectHealthScreenState extends State<ConnectHealthScreen> {
                 children: [
                   Text(_status, style: const TextStyle(fontSize: 14)),
                   const SizedBox(height: 10),
-                  Text("Today Steps: $_steps",
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                      )),
+                  Text(
+                    "Today Steps: $_steps",
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                 ],
               ),
             ),
+
             const SizedBox(height: 16),
+
             SizedBox(
               width: double.infinity,
               height: 52,
               child: ElevatedButton.icon(
                 onPressed: _loading ? null : _connect,
-                icon: const Icon(Icons.health_and_safety),
+                icon: Icon(platformIcon),
                 label: Text(
-                    _loading ? "Please wait..." : "Connect to Google Health"),
+                  _loading ? "Please wait..." : "Connect to $platformName",
+                ),
               ),
             ),
             const SizedBox(height: 10),
@@ -210,15 +266,24 @@ class _ConnectHealthScreenState extends State<ConnectHealthScreen> {
                 label: const Text("Refresh Steps"),
               ),
             ),
+
             const SizedBox(height: 18),
-            const Text(
-              "If steps stay 0 on HONOR:\n"
-              "1) Install/open Health Connect\n"
-              "2) Go to Data sources & priority\n"
-              "3) Ensure a provider (HONOR Health / Google Fit) is the source\n"
-              "4) Grant Steps permission to your app",
-              style: TextStyle(fontSize: 12, color: Colors.black54),
-            )
+
+            if (!isIOS)
+              const Text(
+                "If steps stay 0 on HONOR:\n"
+                "1) Install/open Health Connect\n"
+                "2) Go to Data sources & priority\n"
+                "3) Ensure a provider (HONOR Health / Google Fit) is the source\n"
+                "4) Grant Steps permission to your app",
+                style: TextStyle(fontSize: 12, color: Colors.black54),
+              )
+            else
+              const Text(
+                "Manage permissions anytime:\n"
+                "Settings → Health → Data Access & Devices → CalorAI",
+                style: TextStyle(fontSize: 12, color: Colors.black54),
+              ),
           ],
         ),
       ),

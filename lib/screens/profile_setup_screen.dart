@@ -2,16 +2,22 @@ import 'package:calorai/api/api_call.dart';
 import 'package:calorai/constants/constants.dart';
 import 'package:calorai/constants/utility.dart';
 import 'package:calorai/models/UserRegisterData.dart';
-import 'package:calorai/screens/dashboard_screen.dart';
 import 'package:calorai/screens/main_navigation_screen.dart';
+import 'package:calorai/screens/subscription_page.dart';
 import 'package:calorai/widgets/input_field.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileSetupScreen extends StatefulWidget {
-  String email;
-  String password;
-  ProfileSetupScreen({required this.email, required this.password, super.key});
+  final String email;
+  final String password;
+  final String? name;
+  const ProfileSetupScreen({
+    required this.email,
+    required this.password,
+    this.name,
+    super.key,
+  });
 
   @override
   State<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
@@ -22,11 +28,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
   // Controllers
   final _nameCtrl = TextEditingController();
-  final _ageCtrl = TextEditingController();
-  final _heightCtrl = TextEditingController();
-  final _weightCtrl = TextEditingController();
 
   // Values
+  DateTime? _dob;
+  String _height = "170";
+  String _weight = "70";
   String _gender = "male";
   String _goal = "maintenance";
   String _activity = "moderate";
@@ -34,22 +40,39 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
   bool _saving = false;
 
-  // Colors
+  // Height range: 100–250 cm
+  final List<String> _heightOptions =
+      List.generate(151, (i) => "${i + 100}");
+
+  // Weight range: 30–200 kg
+  final List<String> _weightOptions =
+      List.generate(171, (i) => "${i + 30}");
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.name != null && widget.name!.isNotEmpty) {
+      _nameCtrl.text = widget.name!;
+    }
+  }
 
   @override
   void dispose() {
     _nameCtrl.dispose();
-    _ageCtrl.dispose();
-    _heightCtrl.dispose();
-    _weightCtrl.dispose();
     super.dispose();
   }
 
   void _next() {
     if (_step == 0) {
-      if (_nameCtrl.text.toString().trim().isEmpty) {
+      if (_nameCtrl.text.trim().isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Name is required")),
+        );
+        return;
+      }
+      if (_dob == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Please select your date of birth")),
         );
         return;
       }
@@ -67,18 +90,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
   Future<void> _submit() async {
     setState(() => _saving = true);
-
     try {
-      // TODO: Call update profile API (JSON raw)
-      //await Future.delayed(const Duration(seconds: 1));
-      print(_nameCtrl.text);
-      print(_ageCtrl.text);
-      print(_gender);
-      print(_activity);
-      print(_diet);
-      print(_heightCtrl);
-      print(_weightCtrl);
-      print(_goal);
       if (!mounted) return;
       await registerUser();
     } finally {
@@ -87,23 +99,41 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   }
 
   Future<void> registerUser() async {
+    final dobString = _dob != null
+        ? "${_dob!.year.toString().padLeft(4, '0')}-${_dob!.month.toString().padLeft(2, '0')}-${_dob!.day.toString().padLeft(2, '0')}T00:00:00.000Z"
+        : "";
+
     ApiCall apiCall = ApiCall();
     UserRegisterData userRegisterData = await apiCall.register(
         _nameCtrl.text,
         widget.email,
         widget.password,
-        _ageCtrl.text,
+        dobString,
         _gender,
-        _heightCtrl.text,
-        _weightCtrl.text,
+        _height,
+        _weight,
         _activity,
-        _goal);
+        _goal,
+        firebaseUid: widget.password); // widget.password = Firebase UID for social auth users
 
     SharedPreferences preferences = await SharedPreferences.getInstance();
     preferences.setBool("isRegisterComplete", true);
     preferences.setString("token", userRegisterData.token!);
     preferences.setString("id", userRegisterData.user!.id!);
-    MyUtility.removePage(context, MainNavigationScreen());
+    preferences.setString("email", widget.email);
+    // Save diet preference locally (backend model doesn't store this field)
+    await preferences.setString("dietPreference", _diet);
+
+    // Returning users (e.g. social-auth whose token expired) already have a
+    // goalType set on the backend.  Send them straight to the dashboard.
+    // New users have no goalType yet — send them through subscription setup.
+    final returnedGoalType =
+        userRegisterData.user?.profile?.goalType?.toString() ?? '';
+    if (returnedGoalType.isNotEmpty) {
+      MyUtility.removePage(context, MainNavigationScreen());
+    } else {
+      MyUtility.removePage(context, SubscriptionPage(showSkip: true));
+    }
   }
 
   @override
@@ -234,12 +264,14 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               fontSize: 18, fontWeight: FontWeight.w800, color: textPrimary),
         ),
         const SizedBox(height: 16),
+        // Name — pre-filled from RegisterScreen
         InputField(
-            controller: _nameCtrl,
-            hintText: "Full Name",
-            prefixIcon: Icons.person),
-//        InputField(_nameCtrl, "Full Name", Icons.person),
+          controller: _nameCtrl,
+          hintText: "Full Name",
+          prefixIcon: Icons.person,
+        ),
         const SizedBox(height: 12),
+        // Gender chips
         Row(
           children: ["male", "female", "other"]
               .map((g) => Expanded(
@@ -252,36 +284,72 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
               .toList(),
         ),
         const SizedBox(height: 12),
-        InputField(
-          controller: _ageCtrl,
-          hintText: "Date of Birth",
-          prefixIcon: Icons.cake,
-          keyboardType: TextInputType.number,
+        // Date of birth — date picker
+        GestureDetector(
+          onTap: () async {
+            final picked = await showDatePicker(
+              context: context,
+              initialDate: _dob ?? DateTime(2000, 1, 1),
+              firstDate: DateTime(1920),
+              lastDate: DateTime.now().subtract(const Duration(days: 365 * 5)),
+              builder: (context, child) => Theme(
+                data: Theme.of(context).copyWith(
+                  colorScheme: const ColorScheme.light(
+                    primary: Color(0xFFFF9800),
+                    onPrimary: Colors.white,
+                  ),
+                ),
+                child: child!,
+              ),
+            );
+            if (picked != null) setState(() => _dob = picked);
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF9FAFB),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.cake, color: Color(0xFFFF9800)),
+                const SizedBox(width: 12),
+                Text(
+                  _dob == null
+                      ? "Date of Birth"
+                      : "${_dob!.day.toString().padLeft(2, '0')}/${_dob!.month.toString().padLeft(2, '0')}/${_dob!.year}",
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: _dob == null
+                        ? const Color(0xFF9CA3AF)
+                        : const Color(0xFF1F2937),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-//        _Input(_ageCtrl, "Age", Icons.cake, keyboardType: TextInputType.number),
         const SizedBox(height: 12),
+        // Height and Weight dropdowns
         Row(
           children: [
             Expanded(
-              child: InputField(
-                controller: _heightCtrl,
-                hintText: "Height (cm)",
-                prefixIcon: Icons.height,
-                keyboardType: TextInputType.number,
+              child: _Dropdown(
+                label: "Height (cm)",
+                value: _height,
+                items: _heightOptions,
+                onChanged: (v) => setState(() => _height = v),
               ),
-              // child: _Input(_heightCtrl, "Height (cm)", Icons.height,
-              //     keyboardType: TextInputType.number),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: InputField(
-                controller: _weightCtrl,
-                hintText: "Weight (kg)",
-                prefixIcon: Icons.monitor_weight,
-                keyboardType: TextInputType.number,
+              child: _Dropdown(
+                label: "Weight (kg)",
+                value: _weight,
+                items: _weightOptions,
+                onChanged: (v) => setState(() => _weight = v),
               ),
-              // child: _Input(_weightCtrl, "Weight (kg)", Icons.monitor_weight,
-              //     keyboardType: TextInputType.number),
             ),
           ],
         ),

@@ -1,6 +1,5 @@
 import 'package:calorai/constants/constants.dart';
 import 'package:calorai/constants/utility.dart';
-import 'package:calorai/screens/coming_soon.dart';
 import 'package:calorai/screens/exercise/add_burned_calories.dart';
 import 'package:calorai/screens/exercise/log_exercise_details.dart';
 import 'package:flutter/material.dart';
@@ -85,8 +84,8 @@ class _LogExerciseState extends State<LogExercise> {
             //       AddBurnedCaloriesScreen(
             //         type: "manual",
             //         name: "Manual Calorie",
-            //         intensity: "Normal",
-            //         durationMinutes: 0,
+            //         intensity: "low",
+            //         durationMinutes: 1,
             //         caloriesBurned: 0,
             //       ));
             // })
@@ -115,14 +114,6 @@ class _LogExerciseState extends State<LogExercise> {
               },
             ),
             exerciseBox(
-              icon: Icons.description,
-              title: "Describe",
-              subtitle: "Write your workout in text",
-              onTap: () {
-                MyUtility.changePage(context, ComingSoon());
-              },
-            ),
-            exerciseBox(
               icon: Icons.local_fire_department_outlined,
               title: "Manual",
               subtitle: "Enter exactly how many calories you burned",
@@ -132,8 +123,8 @@ class _LogExerciseState extends State<LogExercise> {
                     AddBurnedCaloriesScreen(
                       type: "manual",
                       name: "Manual Calorie",
-                      intensity: "Normal",
-                      durationMinutes: 0,
+                      intensity: "low",
+                      durationMinutes: 1,
                       caloriesBurned: 0,
                     ));
               },

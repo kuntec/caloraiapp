@@ -593,7 +593,7 @@ class _CreateFoodState extends State<CreateFood> {
     food.source = "user";
 
     FoodData foodData = await apiCall.addFood(food, token!);
-    print(foodData);
+    // print(foodData);
     setState(() {
       isLoading = false;
     });

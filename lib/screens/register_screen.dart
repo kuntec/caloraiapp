@@ -1,8 +1,14 @@
+import 'dart:io';
+
 import 'package:calorai/api/api_call.dart';
 import 'package:calorai/constants/constants.dart';
-//import 'package:calorai/models/AuthData.dart';
+import 'package:calorai/models/UserRegisterData.dart';
+import 'package:calorai/screens/main_navigation_screen.dart';
+import 'package:calorai/screens/profile_setup_screen.dart';
+import 'package:calorai/services/auth_service.dart';
 import 'package:calorai/widgets/gradient_button.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -20,6 +26,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   bool _obscure = true;
   bool _loading = false;
+  bool _loadingGoogle = false;
+  bool _loadingApple = false;
 
   @override
   void dispose() {
@@ -29,46 +37,102 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  Future<void> _onRegister() async {
-    //testing credentials
-    _nameCtrl.text = "Saiyed";
-    _emailCtrl.text = "saiyed.mhs@gmail.com";
-    _passCtrl.text = "saiyed123";
-    FocusScope.of(context).unfocus();
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _loading = true);
-
+  Future<void> _handleGoogle() async {
+    setState(() => _loadingGoogle = true);
     try {
-      // TODO: Call your login API here.
-      await registerUser();
+      final userCredential = await AuthService().signInWithGoogle();
       if (!mounted) return;
-
-      // TODO: Navigate to dashboard or profile setup.
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Register success (demo)")),
-      );
+      final email = userCredential.user!.email!;
+      final uid = userCredential.user!.uid;
+      final name = userCredential.user!.displayName ?? '';
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('email', email);
+      await prefs.setString('uid', uid);
+      await _loginWithSocial(email: email, uid: uid, name: name);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Register failed: $e")),
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
       );
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) setState(() => _loadingGoogle = false);
     }
   }
 
-  void _onForgotPassword() {
-    // TODO: Navigate to Forgot Password screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Forgot password tapped")),
-    );
+  Future<void> _handleApple() async {
+    setState(() => _loadingApple = true);
+    try {
+      final result = await AuthService().signInWithApple();
+      if (!mounted) return;
+      final user = result.credential.user!;
+      final prefs = await SharedPreferences.getInstance();
+      final savedEmail = prefs.getString('email') ?? '';
+      final email = (user.email?.isNotEmpty == true)
+          ? user.email!
+          : (savedEmail.isNotEmpty ? savedEmail : '${user.uid}@apple.com');
+      final displayName = result.displayName ?? user.displayName ?? '';
+      await prefs.setString('email', email);
+      await prefs.setString('uid', user.uid);
+      await _loginWithSocial(email: email, uid: user.uid, name: displayName);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      );
+    } finally {
+      if (mounted) setState(() => _loadingApple = false);
+    }
   }
 
-  void _onSignup() {
-    // TODO: Navigate to Register screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Sign up tapped")),
+  Future<void> _loginWithSocial({
+    required String email,
+    required String uid,
+    required String name,
+  }) async {
+    final result = await ApiCall().socialLogin(uid, email);
+    final token = result.token?.toString() ?? '';
+    if (token.isNotEmpty) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', token);
+      await prefs.setString('id', result.user?.id?.toString() ?? '');
+      await prefs.setString('email', result.user?.email?.toString() ?? email);
+      await prefs.setBool('isRegisterComplete', true);
+      if (!mounted) return;
+      Navigator.pushAndRemoveUntil(context,
+          MaterialPageRoute(builder: (_) => MainNavigationScreen()),
+          (_) => false);
+      return;
+    }
+    if (!mounted) return;
+    Navigator.pushReplacement(context,
+        MaterialPageRoute(
+            builder: (_) => ProfileSetupScreen(
+                  email: email,
+                  password: uid,
+                  name: name,
+                )));
+  }
+
+  Future<void> _onRegister() async {
+    FocusScope.of(context).unfocus();
+    if (!_formKey.currentState!.validate()) return;
+
+    if (_passCtrl.text != _confirmPassCtrl.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Passwords do not match")),
+      );
+      return;
+    }
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProfileSetupScreen(
+          email: _emailCtrl.text.trim(),
+          password: _passCtrl.text,
+          name: _nameCtrl.text.trim(),
+        ),
+      ),
     );
   }
 
@@ -112,27 +176,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 // Logo
                 Center(
                   child: Container(
-                    height: 64,
-                    width: 64,
+                    height: 100,
+                    width: 100,
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: const [
-                        BoxShadow(
-                          blurRadius: 18,
-                          offset: Offset(0, 8),
-                          color: Color(0x14000000),
-                        )
+                        // BoxShadow(
+                        //   blurRadius: 18,
+                        //   offset: Offset(0, 8),
+                        //   color: Color(0x14000000),
+                        // )
                       ],
                     ),
                     // child: const Icon(Icons.local_dining,
-                    //     color: primary, size: 32),
+                    //     color: primaryOrangeDark, size: 32),
                     // Replace with your asset logo:
-                    child: Image.asset("assets/images/logo.jpg"),
+                    child: Image.asset("assets/images/logo_alpha.png"),
                   ),
                 ),
                 const SizedBox(height: 12),
-
                 // App name
                 const Center(
                   child: Text(
@@ -236,26 +299,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           },
                         ),
 
-                        const SizedBox(height: 10),
-
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: _onForgotPassword,
-                            style: TextButton.styleFrom(
-                              foregroundColor: primary,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 4),
-                            ),
-                            child: const Text(
-                              "Forgot password?",
-                              style: TextStyle(
-                                  fontSize: 13, fontWeight: FontWeight.w600),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 16),
 
                         // Login button
                         GradientButton(
@@ -287,11 +331,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                         const SizedBox(height: 14),
 
-                        // Google button (optional)
+                        // Google button
                         OutlinedButton.icon(
-                          onPressed: _loading ? null : () {},
-                          icon: const Icon(Icons.g_mobiledata,
-                              size: 26, color: textPrimary),
+                          onPressed: (_loading || _loadingGoogle || _loadingApple)
+                              ? null
+                              : _handleGoogle,
+                          icon: _loadingGoogle
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2, color: textPrimary),
+                                )
+                              : const Icon(Icons.g_mobiledata,
+                                  size: 26, color: textPrimary),
                           label: const Text(
                             "Continue with Google",
                             style: TextStyle(
@@ -308,6 +361,40 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             minimumSize: const Size.fromHeight(52),
                           ),
                         ),
+
+                        // Apple button — iOS only
+                        if (Platform.isIOS) ...[
+                          const SizedBox(height: 12),
+                          OutlinedButton.icon(
+                            onPressed: (_loading || _loadingGoogle || _loadingApple)
+                                ? null
+                                : _handleApple,
+                            icon: _loadingApple
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2, color: textPrimary),
+                                  )
+                                : const Icon(Icons.apple,
+                                    size: 24, color: textPrimary),
+                            label: const Text(
+                              "Continue with Apple",
+                              style: TextStyle(
+                                color: textPrimary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              side: const BorderSide(color: border),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              minimumSize: const Size.fromHeight(52),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -318,15 +405,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
       ),
     );
-  }
-
-  Future<void> registerUser() async {
-    // ApiCall apiCall = ApiCall();
-    // AuthData authData = await apiCall.register(_nameCtrl.text.toString(),
-    //     _emailCtrl.text.toString(), _passCtrl.text.toString());
-    // if (authData.success!) {
-    //   print(authData.data!.token!);
-    // }
   }
 }
 
@@ -362,7 +440,10 @@ class _InputField extends StatelessWidget {
       keyboardType: keyboardType,
       validator: validator,
       obscureText: obscureText,
-      style: const TextStyle(fontSize: 14),
+      textCapitalization: TextCapitalization.none,
+      autocorrect: false,
+      enableSuggestions: false,
+      style: const TextStyle(fontFamily: '', fontSize: 14),
       decoration: InputDecoration(
         filled: true,
         fillColor: bgField,

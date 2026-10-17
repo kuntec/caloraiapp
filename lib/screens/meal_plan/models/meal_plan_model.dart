@@ -36,8 +36,28 @@ class MealItem {
   }
 }
 
+class DayPlan {
+  final int dayNumber;
+  final List<MealItem> meals;
+
+  DayPlan({
+    required this.dayNumber,
+    required this.meals,
+  });
+
+  factory DayPlan.fromJson(Map<String, dynamic> json) {
+    return DayPlan(
+      dayNumber: (json["dayNumber"] ?? 0).toInt(),
+      meals: (json["meals"] as List<dynamic>? ?? [])
+          .map((e) => MealItem.fromJson(e))
+          .toList(),
+    );
+  }
+}
+
 class MealPlanModel {
   final String id;
+  final String durationType;
   final double targetCalories;
   final double targetProtein;
   final double targetCarbs;
@@ -46,10 +66,12 @@ class MealPlanModel {
   final double totalProtein;
   final double totalCarbs;
   final double totalFats;
-  final List<MealItem> meals;
+  final List<MealItem> meals; // 1-day plan
+  final List<DayPlan> days;   // multi-day plan
 
   MealPlanModel({
     required this.id,
+    required this.durationType,
     required this.targetCalories,
     required this.targetProtein,
     required this.targetCarbs,
@@ -59,11 +81,15 @@ class MealPlanModel {
     required this.totalCarbs,
     required this.totalFats,
     required this.meals,
+    required this.days,
   });
+
+  bool get isMultiDay => days.isNotEmpty;
 
   factory MealPlanModel.fromJson(Map<String, dynamic> json) {
     return MealPlanModel(
       id: json["_id"] ?? "",
+      durationType: json["durationType"] ?? "daily",
       targetCalories: (json["targetCalories"] ?? 0).toDouble(),
       targetProtein: (json["targetProtein"] ?? 0).toDouble(),
       targetCarbs: (json["targetCarbs"] ?? 0).toDouble(),
@@ -74,6 +100,9 @@ class MealPlanModel {
       totalFats: (json["totalFats"] ?? 0).toDouble(),
       meals: (json["meals"] as List<dynamic>? ?? [])
           .map((e) => MealItem.fromJson(e))
+          .toList(),
+      days: (json["days"] as List<dynamic>? ?? [])
+          .map((e) => DayPlan.fromJson(e))
           .toList(),
     );
   }

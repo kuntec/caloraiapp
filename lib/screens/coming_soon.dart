@@ -20,7 +20,7 @@ class _ComingSoonState extends State<ComingSoon> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset("assets/images/logo.jpg"),
+            Image.asset("assets/images/logo.png"),
             Text(
               "Coming Soon",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),

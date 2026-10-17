@@ -4,16 +4,29 @@ class EditableRoundImage extends StatelessWidget {
   final String imageUrl;
   final double size;
   final VoidCallback onEdit;
+  /// Shown as a coloured circle with text when [imageUrl] is empty.
+  /// Pass the user's full name and this widget extracts up to 2 initials.
+  final String? name;
 
   const EditableRoundImage({
     super.key,
     required this.imageUrl,
     required this.onEdit,
     this.size = 100,
+    this.name,
   });
+
+  /// Returns up to two uppercase initials from [name].
+  String _initials() {
+    if (name == null || name!.trim().isEmpty) return '?';
+    final parts = name!.trim().split(RegExp(r'\s+'));
+    if (parts.length == 1) return parts[0][0].toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final showImage = imageUrl.isNotEmpty;
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -31,18 +44,13 @@ class EditableRoundImage extends StatelessWidget {
             ],
           ),
           child: ClipOval(
-            child: Image.network(
-              imageUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
-                color: const Color(0xFFEFF1F6),
-                child: const Icon(
-                  Icons.image_not_supported_outlined,
-                  size: 30,
-                  color: Colors.grey,
-                ),
-              ),
-            ),
+            child: showImage
+                ? Image.network(
+                    imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => _initialsWidget(),
+                  )
+                : _initialsWidget(),
           ),
         ),
 
@@ -76,6 +84,22 @@ class EditableRoundImage extends StatelessWidget {
         //   ),
         // ),
       ],
+    );
+  }
+
+  Widget _initialsWidget() {
+    return Container(
+      color: const Color(0xFFFF9800),
+      child: Center(
+        child: Text(
+          _initials(),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: size * 0.34,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
     );
   }
 }

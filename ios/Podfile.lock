@@ -43,11 +43,15 @@ PODS:
   - FirebaseCoreInternal (12.8.0):
     - "GoogleUtilities/NSData+zlib (~> 8.1)"
   - Flutter (1.0.0)
+  - flutter_local_notifications (0.0.1):
+    - Flutter
   - flutter_native_splash (2.4.3):
     - Flutter
   - flutter_secure_storage_darwin (10.0.0):
     - Flutter
     - FlutterMacOS
+  - flutter_timezone (0.0.1):
+    - Flutter
   - fluttertoast (0.0.2):
     - Flutter
   - google_sign_in_ios (0.0.1):
@@ -96,19 +100,34 @@ PODS:
     - Flutter
   - image_picker_ios (0.0.1):
     - Flutter
-  - in_app_purchase_storekit (0.0.1):
+  - package_info_plus (0.4.5):
     - Flutter
-    - FlutterMacOS
   - path_provider_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
   - permission_handler_apple (9.3.0):
     - Flutter
   - PromisesObjC (2.4.0)
+  - purchases_flutter (10.0.0):
+    - Flutter
+    - PurchasesHybridCommon (= 18.0.0)
+  - purchases_ui_flutter (10.0.0):
+    - Flutter
+    - PurchasesHybridCommonUI (= 18.0.0)
+  - PurchasesHybridCommon (18.0.0):
+    - RevenueCat (= 5.67.2)
+  - PurchasesHybridCommonUI (18.0.0):
+    - PurchasesHybridCommon (= 18.0.0)
+    - RevenueCatUI (= 5.67.2)
   - RecaptchaInterop (101.0.0)
+  - RevenueCat (5.67.2)
+  - RevenueCatUI (5.67.2):
+    - RevenueCat (= 5.67.2)
   - shared_preferences_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
+  - sign_in_with_apple (0.0.1):
+    - Flutter
   - url_launcher_ios (0.0.1):
     - Flutter
 
@@ -117,16 +136,21 @@ DEPENDENCIES:
   - firebase_auth (from `.symlinks/plugins/firebase_auth/ios`)
   - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
   - Flutter (from `Flutter`)
+  - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
   - flutter_native_splash (from `.symlinks/plugins/flutter_native_splash/ios`)
   - flutter_secure_storage_darwin (from `.symlinks/plugins/flutter_secure_storage_darwin/darwin`)
+  - flutter_timezone (from `.symlinks/plugins/flutter_timezone/ios`)
   - fluttertoast (from `.symlinks/plugins/fluttertoast/ios`)
   - google_sign_in_ios (from `.symlinks/plugins/google_sign_in_ios/darwin`)
   - health (from `.symlinks/plugins/health/ios`)
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
-  - in_app_purchase_storekit (from `.symlinks/plugins/in_app_purchase_storekit/darwin`)
+  - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
+  - purchases_flutter (from `.symlinks/plugins/purchases_flutter/ios`)
+  - purchases_ui_flutter (from `.symlinks/plugins/purchases_ui_flutter/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
+  - sign_in_with_apple (from `.symlinks/plugins/sign_in_with_apple/ios`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
 
 SPEC REPOS:
@@ -145,7 +169,11 @@ SPEC REPOS:
     - GTMAppAuth
     - GTMSessionFetcher
     - PromisesObjC
+    - PurchasesHybridCommon
+    - PurchasesHybridCommonUI
     - RecaptchaInterop
+    - RevenueCat
+    - RevenueCatUI
 
 EXTERNAL SOURCES:
   device_info_plus:
@@ -156,10 +184,14 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/firebase_core/ios"
   Flutter:
     :path: Flutter
+  flutter_local_notifications:
+    :path: ".symlinks/plugins/flutter_local_notifications/ios"
   flutter_native_splash:
     :path: ".symlinks/plugins/flutter_native_splash/ios"
   flutter_secure_storage_darwin:
     :path: ".symlinks/plugins/flutter_secure_storage_darwin/darwin"
+  flutter_timezone:
+    :path: ".symlinks/plugins/flutter_timezone/ios"
   fluttertoast:
     :path: ".symlinks/plugins/fluttertoast/ios"
   google_sign_in_ios:
@@ -168,14 +200,20 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/health/ios"
   image_picker_ios:
     :path: ".symlinks/plugins/image_picker_ios/ios"
-  in_app_purchase_storekit:
-    :path: ".symlinks/plugins/in_app_purchase_storekit/darwin"
+  package_info_plus:
+    :path: ".symlinks/plugins/package_info_plus/ios"
   path_provider_foundation:
     :path: ".symlinks/plugins/path_provider_foundation/darwin"
   permission_handler_apple:
     :path: ".symlinks/plugins/permission_handler_apple/ios"
+  purchases_flutter:
+    :path: ".symlinks/plugins/purchases_flutter/ios"
+  purchases_ui_flutter:
+    :path: ".symlinks/plugins/purchases_ui_flutter/ios"
   shared_preferences_foundation:
     :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
+  sign_in_with_apple:
+    :path: ".symlinks/plugins/sign_in_with_apple/ios"
   url_launcher_ios:
     :path: ".symlinks/plugins/url_launcher_ios/ios"
 
@@ -193,8 +231,10 @@ SPEC CHECKSUMS:
   FirebaseCoreExtension: 6605938d51f765d8b18bfcafd2085276a252bee2
   FirebaseCoreInternal: fe5fa466aeb314787093a7dce9f0beeaad5a2a21
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  flutter_local_notifications: eda81afddbf18f8589f6ec069ce593c4c6378769
   flutter_native_splash: df59bb2e1421aa0282cb2e95618af4dcb0c56c29
   flutter_secure_storage_darwin: 557817588b80e60213cbecb573c45c76b788018d
+  flutter_timezone: ffb07bdad3c6276af8dada0f11978d8a1f8a20bb
   fluttertoast: 21eecd6935e7064cc1fcb733a4c5a428f3f24f0f
   google_sign_in_ios: 7336a3372ea93ea56a21e126a0055ffca3723601
   GoogleSignIn: fcee2257188d5eda57a5e2b6a715550ffff9206d
@@ -203,14 +243,21 @@ SPEC CHECKSUMS:
   GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
   health: c1dfe8bc28ccd5998a32bdd0963943bfe9ac8320
   image_picker_ios: 4f2f91b01abdb52842a8e277617df877e40f905b
-  in_app_purchase_storekit: 2342c0a5da86593124d08dd13d920f39a52b273a
+  package_info_plus: c0502532a26c7662a62a356cebe2692ec5fe4ec4
   path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
   permission_handler_apple: 9878588469a2b0d0fc1e048d9f43605f92e6cec2
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
+  purchases_flutter: 292ff4cf6858d0bedac3505ac82c60c91745f0f0
+  purchases_ui_flutter: eaf2bf11c76ed1bb1a9abe671607d7b325694bda
+  PurchasesHybridCommon: 5905e1b6e8a650e90ba7a27ee190df551a82db76
+  PurchasesHybridCommonUI: ca78e4b2b061a10bdb8f250ea80d143814d4a6a4
   RecaptchaInterop: 11e0b637842dfb48308d242afc3f448062325aba
+  RevenueCat: 98177fc8a596e55a62b109c37e6d35f0132b4309
+  RevenueCatUI: 736c4265528bb008d201cecc116da600a838390a
   shared_preferences_foundation: fcdcbc04712aee1108ac7fda236f363274528f78
+  sign_in_with_apple: f3bf75217ea4c2c8b91823f225d70230119b8440
   url_launcher_ios: bb13df5870e8c4234ca12609d04010a21be43dfa
 
-PODFILE CHECKSUM: ae9e65fc23486119b8e977fd41d9213f251e537a
+PODFILE CHECKSUM: 93ca78d0d447e94e68623727bd86cae00eb7b59e
 
 COCOAPODS: 1.16.2

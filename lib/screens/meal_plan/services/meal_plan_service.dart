@@ -5,34 +5,41 @@ import '../models/meal_plan_model.dart';
 import '../models/nutrition_profile_model.dart';
 
 class MealPlanService {
-//  static const String baseUrl = "http://localhost:5000/api/meal-plan";
-  // Replace with your real IP for emulator/device
-
   Future<void> saveProfile(NutritionProfile profile) async {
-    print(APIResource.ADD_MEAL_PROFILE);
+    // print(APIResource.ADD_MEAL_PROFILE);
     final response = await http.post(
       Uri.parse(APIResource.ADD_MEAL_PROFILE),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode(profile.toJson()),
     );
-    print(jsonEncode(profile.toJson()));
-    print(response.body);
+    // print(jsonEncode(profile.toJson()));
+    // print(response.body);
     final data = jsonDecode(response.body);
-//    print(response);
 
     if (response.statusCode != 200 || data["success"] != true) {
-      print("FAILED TO SAVE PROFILE");
+      // print("FAILED TO SAVE PROFILE");
       throw Exception(data["message"] ?? "Failed to save profile");
     }
   }
 
-  Future<MealPlanModel> generateMealPlan(String userId) async {
+  Future<MealPlanModel> generateMealPlan(String userId,
+      {int numberOfDays = 1}) async {
+    String durationType;
+    if (numberOfDays == 3) {
+      durationType = "3day";
+    } else if (numberOfDays == 7) {
+      durationType = "7day";
+    } else {
+      durationType = "daily";
+    }
+
     final response = await http.post(
       Uri.parse(APIResource.GENERATE_MEAL_PLAN),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "userId": userId,
-        "durationType": "daily",
+        "durationType": durationType,
+        "numberOfDays": numberOfDays,
       }),
     );
 
@@ -46,7 +53,7 @@ class MealPlanService {
   }
 
   Future<List<MealPlanModel>> getMealPlans(String userId) async {
-    print(APIResource.ALL_MEAL_PLANS + "/$userId");
+    // print(APIResource.ALL_MEAL_PLANS + "/$userId");
     final response = await http.get(
       Uri.parse(APIResource.ALL_MEAL_PLANS + "/$userId"),
       headers: {"Content-Type": "application/json"},

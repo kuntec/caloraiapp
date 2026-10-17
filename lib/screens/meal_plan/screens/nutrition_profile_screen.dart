@@ -13,8 +13,13 @@ import 'generated_meal_plan_screen.dart';
 
 class NutritionProfileScreen extends StatefulWidget {
   final String userId;
+  final int selectedDays;
 
-  const NutritionProfileScreen({super.key, required this.userId});
+  const NutritionProfileScreen({
+    super.key,
+    required this.userId,
+    this.selectedDays = 1,
+  });
 
   @override
   State<NutritionProfileScreen> createState() => _NutritionProfileScreenState();
@@ -52,21 +57,21 @@ class _NutritionProfileScreenState extends State<NutritionProfileScreen> {
   }
 
   Future<void> _submit() async {
-    print(widget.userId);
-    print(ageController.text);
-    print(heightController.text);
-    print(weightController.text);
-    print(targetWeightController.text);
-    print(gender);
-    print(activityLevel);
-    print(goal);
-    print(dietType.toLowerCase());
-    print(halalRequired);
-    print(mealsPerDay);
-    print(cuisineController.text.toLowerCase());
-    print(allergiesController.text.toLowerCase());
-    print(excludedFoodsController.text.toLowerCase());
-    print(notesController.text);
+    // print(widget.userId);
+    // print(ageController.text);
+    // print(heightController.text);
+    // print(weightController.text);
+    // print(targetWeightController.text);
+    // print(gender);
+    // print(activityLevel);
+    // print(goal);
+    // print(dietType.toLowerCase());
+    // print(halalRequired);
+    // print(mealsPerDay);
+    // print(cuisineController.text.toLowerCase());
+    // print(allergiesController.text.toLowerCase());
+    // print(excludedFoodsController.text.toLowerCase());
+    // print(notesController.text);
 
 //    if (!_formKey.currentState!.validate()) return;
 
@@ -94,7 +99,10 @@ class _NutritionProfileScreenState extends State<NutritionProfileScreen> {
       );
       //print(profile.toString());
       await service.saveProfile(profile);
-      final mealPlan = await service.generateMealPlan(widget.userId);
+      final mealPlan = await service.generateMealPlan(
+        widget.userId,
+        numberOfDays: widget.selectedDays,
+      );
 
       if (!mounted) return;
 
@@ -146,9 +154,9 @@ class _NutritionProfileScreenState extends State<NutritionProfileScreen> {
     setState(() {
       isLoading = true;
     });
-    print(FirebaseAuth.instance.currentUser!.email);
-    print(FirebaseAuth.instance.currentUser!.displayName);
-    print(FirebaseAuth.instance.currentUser!.photoURL);
+    // print(FirebaseAuth.instance.currentUser?.email);
+    // print(FirebaseAuth.instance.currentUser?.displayName);
+    // print(FirebaseAuth.instance.currentUser?.photoURL);
 
     SharedPreferences preferences = await SharedPreferences.getInstance();
     String? email = preferences.getString("email");

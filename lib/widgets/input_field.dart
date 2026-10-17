@@ -25,6 +25,10 @@ class InputField extends StatelessWidget {
       readOnly: readOnly,
       controller: controller,
       keyboardType: keyboardType,
+      textCapitalization: TextCapitalization.none,
+      autocorrect: false,
+      enableSuggestions: false,
+      style: const TextStyle(fontFamily: '', fontSize: 14),
       decoration: InputDecoration(
         filled: true,
         fillColor: bg,

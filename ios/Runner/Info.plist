@@ -2,10 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>CalorAi</string>
+	<string>Calor AI</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -13,21 +15,52 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>calorai</string>
+	<string>CalorAI</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.82830612690-q77kenrpas5ijesbbt47c0t2hk1k8u5h</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>rc-20cb7a0065</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>CalorAI uses your camera to photograph meals so our AI can instantly identify food items and estimate their calories and macros.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>This app reads your step count data from Apple Health to track your daily activity and progress.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>CalorAI does not save any data to Apple Health. This permission is required by the HealthKit framework.</string>
+<key>NSPhotoLibraryUsageDescription</key>
+	<string>CalorAI accesses your photo library so you can select existing meal photos for AI-powered calorie and macro analysis.</string>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
+	<key>UIStatusBarHidden</key>
+	<false/>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
@@ -41,31 +74,5 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
-
-	<key>NSHealthShareUsageDescription</key>
-    <string>This app reads your step count data from Apple Health to track your daily activity and progress.</string>
-
-    <key>NSCameraUsageDescription</key>
-    <string>This app needs camera access to scan food images.</string>
-    <key>NSPhotoLibraryUsageDescription</key>
-    <string>This app needs photo library access to choose food images.</string>
-
-	<key>CFBundleURLTypes</key>
-    <array>
-      <dict>
-        <key>CFBundleTypeRole</key>
-        <string>Editor</string>
-        <key>CFBundleURLSchemes</key>
-        <array>
-          <string>com.googleusercontent.apps.82830612690-0erflsermkdio6ar7nl1ss3mmad46l53</string>
-        </array>
-      </dict>
-    </array>
-
-
 </dict>
 </plist>

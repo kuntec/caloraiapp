@@ -7,9 +7,11 @@ class SearchFoodData {
   SearchFoodData({
     List<Food>? foods,
     dynamic total,
+    bool hasMore = false,
   }) {
     _foods = foods;
     _total = total;
+    _hasMore = hasMore;
   }
 
   SearchFoodData.fromJson(dynamic json) {
@@ -20,19 +22,24 @@ class SearchFoodData {
       });
     }
     _total = json['total'];
+    _hasMore = json['hasMore'] ?? false;
   }
   List<Food>? _foods;
   dynamic _total;
+  bool _hasMore = false;
   SearchFoodData copyWith({
     List<Food>? foods,
     dynamic total,
+    bool? hasMore,
   }) =>
       SearchFoodData(
         foods: foods ?? _foods,
         total: total ?? _total,
+        hasMore: hasMore ?? _hasMore,
       );
   List<Food>? get foods => _foods;
   dynamic get total => _total;
+  bool get hasMore => _hasMore;
 
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{};
@@ -40,6 +47,7 @@ class SearchFoodData {
       map['foods'] = _foods?.map((v) => v.toJson()).toList();
     }
     map['total'] = _total;
+    map['hasMore'] = _hasMore;
     return map;
   }
 }

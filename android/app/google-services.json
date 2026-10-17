@@ -12,7 +12,28 @@
           "package_name": "app.calorai.calorai"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "82830612690-5hdubr4fpq3miq0gmu04ujr1u9hn56s4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "app.calorai.calorai",
+            "certificate_hash": "171e95a0e90533d6cf020b795b2dc633f0d4fff1"
+          }
+        },
+        {
+          "client_id": "82830612690-v93fv8q309vtjadd8iobvtghcig3ti6k.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "app.calorai.calorai",
+            "certificate_hash": "5821fbe1a4efca83b4341f2cd0a6668273d585b5"
+          }
+        },
+        {
+          "client_id": "82830612690-pghni5dc5ria234qe09ev6l7f0q70gs2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBkGTIvT3e-L6xvqDWkkZauHBkOAKgF1vs"
@@ -20,7 +41,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "82830612690-pghni5dc5ria234qe09ev6l7f0q70gs2.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "82830612690-0erflsermkdio6ar7nl1ss3mmad46l53.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "app.calorai.calorai"
+              }
+            }
+          ]
         }
       }
     }

@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:calorai/services/notification_service.dart';
 import 'package:calorai/screens/authenticate/auth_choice_screen.dart';
 import 'package:calorai/screens/authenticate/welcome_screen.dart';
 import 'package:calorai/screens/calor_ai_dashboard_screen.dart';
@@ -7,17 +10,33 @@ import 'package:calorai/screens/splash_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:upgrader/upgrader.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 
 const String _clientId =
     '82830612690-pghni5dc5ria234qe09ev6l7f0q70gs2.apps.googleusercontent.com';
+
+const String _revenueCatAppleApiKey = 'appl_QhcxijxDcgbDPgbtSEJgaBlxrvD';
+const String _revenueCatGoogleApiKey =
+    'goog_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'; // TODO: replace after adding Android app
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(); // Uses google-services.json
-  await GoogleSignIn.instance.initialize(
-    serverClientId: _clientId,
-  );
+  await Firebase.initializeApp();
+  await GoogleSignIn.instance.initialize(serverClientId: _clientId);
+  await _configureRevenueCat();
+  await NotificationService.init();
+  await NotificationService.scheduleAllReminders();
   runApp(const MyApp());
+}
+
+Future<void> _configureRevenueCat() async {
+  await Purchases.setLogLevel(
+      LogLevel.debug); // set to info/error in production
+  final apiKey =
+      Platform.isIOS ? _revenueCatAppleApiKey : _revenueCatGoogleApiKey;
+  await Purchases.configure(PurchasesConfiguration(apiKey));
 }
 
 class MyApp extends StatelessWidget {
@@ -33,8 +52,18 @@ class MyApp extends StatelessWidget {
         fontFamily: 'QBOne',
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
+        inputDecorationTheme: const InputDecorationTheme(
+          hintStyle: TextStyle(fontFamily: ''),
+        ),
       ),
-      home: SplashScreen(),
+      home: UpgradeAlert(
+        dialogStyle: UpgradeDialogStyle.cupertino,
+        showIgnore: false,
+        upgrader: Upgrader(
+          durationUntilAlertAgain: const Duration(days: 1),
+        ),
+        child: SplashScreen(),
+      ),
     );
   }
 }

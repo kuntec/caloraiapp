@@ -29,7 +29,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _activity = "moderate";
   String _diet = "Halal";
 
+  // Plan settings (stored locally)
+  int _planDurationWeeks = 8;
+  int _mealsPerDay = 3;
+
   bool _saving = false;
+  bool _loading = true;
 
   static const bg = Color(0xFFF9FAFB);
   static const primary = Color(0xFFFF9800);
@@ -46,26 +51,62 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> getProfile() async {
-    print(FirebaseAuth.instance.currentUser!.email);
-    print(FirebaseAuth.instance.currentUser!.displayName);
-    print(FirebaseAuth.instance.currentUser!.photoURL);
+    try {
+      SharedPreferences preferences = await SharedPreferences.getInstance();
+      final token = preferences.getString("token");
+      // Load saved local preferences (backend doesn't store these)
+      final savedDiet = preferences.getString("dietPreference") ?? "Halal";
+      final savedPlanWeeks = preferences.getInt("planDurationWeeks") ?? 8;
+      final savedMeals = preferences.getInt("mealsPerDay") ?? 3;
 
-    SharedPreferences preferences = await SharedPreferences.getInstance();
-    String? email = preferences.getString("email");
-    String? password = preferences.getString("uid");
-    if (email != null && password != null) {
-      ApiCall apiCall = ApiCall();
-      UserRegisterData userRegisterData = await apiCall.login(email, password);
-      if (userRegisterData.status) {
-        _nameCtrl.text = userRegisterData.user!.profile!.fullName;
-        _contactCtrl.text = "";
-        _heightCtrl.text = userRegisterData.user!.profile!.heightCm.toString();
-        _weightCtrl.text = userRegisterData.user!.profile!.weightKg.toString();
-        _goal = userRegisterData.user!.profile!.goalType;
-        _activity = userRegisterData.user!.profile!.activityLevel;
-        _diet = userRegisterData.user!.profile!.dailyStepGoal.toString();
+      if (token != null) {
+        ApiCall apiCall = ApiCall();
+        UserRegisterData userRegisterData = await apiCall.getMe(token);
+        if (mounted) {
+          // Backend /auth/me returns {user:{...}} without a status field,
+        // so check for user/profile presence rather than status.
+        if (userRegisterData.user?.profile != null) {
+            final profile = userRegisterData.user!.profile!;
+            _nameCtrl.text = profile.fullName?.toString() ?? '';
+            // Show email from API response, fall back to SharedPreferences
+            _contactCtrl.text =
+                userRegisterData.user?.email?.toString() ??
+                preferences.getString("email") ??
+                '';
+            _heightCtrl.text = profile.heightCm?.toString() ?? '';
+            _weightCtrl.text = profile.weightKg?.toString() ?? '';
+            // Guard against API returning a value not in the dropdown list
+            const validGoals = [
+              'weight_loss', 'muscle_gain', 'maintenance',
+              'keto', 'intermittent_fasting'
+            ];
+            const validActivity = [
+              'sedentary', 'light', 'moderate', 'active', 'very-active'
+            ];
+            final apiGoal = profile.goalType?.toString() ?? '';
+            final apiActivity = profile.activityLevel?.toString() ?? '';
+            _goal = validGoals.contains(apiGoal) ? apiGoal : 'maintenance';
+            _activity = validActivity.contains(apiActivity)
+                ? apiActivity
+                : 'moderate';
+            _diet = savedDiet;
+            _planDurationWeeks = savedPlanWeeks;
+            _mealsPerDay = savedMeals;
+          } else {
+            // API failed or profile not set — at least show saved email
+            _contactCtrl.text = preferences.getString("email") ?? '';
+            _diet = savedDiet;
+            _planDurationWeeks = savedPlanWeeks;
+            _mealsPerDay = savedMeals;
+          }
+          setState(() => _loading = false);
+        }
+      } else {
+        if (mounted) setState(() => _loading = false);
       }
-      setState(() {});
+    } catch (e) {
+      // print("getProfile error: $e");
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -83,12 +124,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => _saving = true);
 
     try {
-      // TODO: call your API update profile (JSON raw)
-      await Future.delayed(const Duration(seconds: 1));
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString("token") ?? '';
+
+      // Save local-only preferences
+      await prefs.setString("dietPreference", _diet);
+      await prefs.setInt("planDurationWeeks", _planDurationWeeks);
+      await prefs.setInt("mealsPerDay", _mealsPerDay);
+      // Record plan start date only once (when plan is first configured)
+      if (prefs.getString("planStartDate") == null) {
+        await prefs.setString(
+          "planStartDate",
+          DateTime.now().toIso8601String().substring(0, 10),
+        );
+      }
+
+      // Save name, height, weight, goal, activity to backend
+      await ApiCall().updateProfile(
+        token: token,
+        fullName: _nameCtrl.text.trim(),
+        heightCm: _heightCtrl.text.trim(),
+        weightKg: _weightCtrl.text.trim(),
+        activityLevel: _activity,
+        goalType: _goal,
+      );
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Profile updated (demo)")),
+        const SnackBar(content: Text("Profile saved ✓")),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Save failed: $e")),
       );
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -96,10 +164,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _logout() async {
-    // TODO: clear token/session + navigate to auth screen
     SharedPreferences preferences = await SharedPreferences.getInstance();
-    preferences.clear();
-    MyUtility.removePage(context, SplashScreen());
+    await preferences.clear();
+    // Sign out from Firebase so Apple/Google re-login shows a fresh auth sheet
+    await FirebaseAuth.instance.signOut();
+    if (mounted) MyUtility.removePage(context, SplashScreen());
   }
 
   @override
@@ -129,7 +198,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           )
         ],
       ),
-      body: SafeArea(
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
           child: Column(
@@ -140,9 +211,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 alignment: Alignment.center,
                 margin: EdgeInsets.all(20),
                 child: EditableRoundImage(
-                  imageUrl:
-                      FirebaseAuth.instance.currentUser!.photoURL.toString(),
+                  imageUrl: FirebaseAuth.instance.currentUser?.photoURL ?? '',
                   size: 100,
+                  name: _nameCtrl.text,
                   onEdit: () {
                     // open image picker / rescan / crop
                   },
@@ -231,8 +302,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 12),
                     InputField(
                       controller: _contactCtrl,
-                      hintText: "Phone / Email",
-                      prefixIcon: Icons.phone_iphone,
+                      hintText: "Email",
+                      prefixIcon: Icons.email_outlined,
+                      readOnly: true,
                     ),
                     const SizedBox(height: 12),
                     Row(
@@ -341,6 +413,73 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
 
+              const SizedBox(height: 14),
+
+              // Plan settings card
+              _Card(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text(
+                      "Plan Settings",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Plan duration
+                    const Text(
+                      "Plan Duration",
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: [4, 8, 12, 16].map((w) {
+                        return _Chip(
+                          text: "$w weeks",
+                          selected: _planDurationWeeks == w,
+                          onTap: () =>
+                              setState(() => _planDurationWeeks = w),
+                        );
+                      }).toList(),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Meals per day
+                    const Text(
+                      "Meals per Day",
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: [2, 3, 4, 5].map((m) {
+                        return _Chip(
+                          text: "$m meals",
+                          selected: _mealsPerDay == m,
+                          onTap: () => setState(() => _mealsPerDay = m),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+
               const SizedBox(height: 16),
 
               // Save button
@@ -381,6 +520,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
+
+// end of ProfileScreen
 
 class _Card extends StatelessWidget {
   const _Card({required this.child});

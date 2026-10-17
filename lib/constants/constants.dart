@@ -43,7 +43,8 @@ const kMessages = "Messages";
 const kAiCourses = "AI Courses";
 const kGenerateAiCourses = "Generate Courses";
 
-const kWaterCup = 1000;
+const kWaterCup = 250; // default ml per tap; user can override in Settings
+const kRevenueCatAPIKEY = "test_PoaKRPXpcmmAektxorJPbGaaweK";
 
 const colorCodes = [
   0xFF3DB2FF,

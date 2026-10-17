@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:intl/intl.dart';
 import 'package:calorai/api/api_resources.dart';
 import 'package:calorai/api/http_call.dart';
 import 'package:calorai/models/DailyMetricsData.dart';
@@ -18,7 +19,8 @@ class ApiCall {
       String height,
       String weight,
       String activity,
-      String goal) async {
+      String goal,
+      {String? firebaseUid}) async {
     Uri uri = Uri.parse(APIResource.REGISTER);
     HttpCall call = HttpCall();
     final headers = <String, String>{
@@ -34,15 +36,42 @@ class ApiCall {
       'heightCm': height,
       'weightKg': weight,
       'activityLevel': activity,
-      'goalType': goal
+      'goalType': goal,
+      if (firebaseUid != null && firebaseUid.isNotEmpty)
+        'firebaseUid': firebaseUid,
     };
-    print(params);
+    // print(params);
     http.Response response = await call.post(uri, headers, params);
-    print(response.body);
+    // print(response.body);
+    return UserRegisterData.fromJson(jsonDecode(response.body));
+  }
+
+  /// Check if a social-auth user already exists on the backend.
+  /// Returns their token + profile if found, or exists=false if new user.
+  Future<UserRegisterData> socialLogin(String uid, String email) async {
+    Uri uri = Uri.parse(APIResource.SOCIAL_LOGIN);
+    HttpCall call = HttpCall();
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+
+    final params = <String, dynamic>{'uid': uid, 'email': email};
+    http.Response response = await call.post(uri, headers, params);
+    // print('socialLogin response: ${response.body}');
     return UserRegisterData.fromJson(jsonDecode(response.body));
   }
 
   //
+  Future<UserRegisterData> getMe(String token) async {
+    Uri uri = Uri.parse(APIResource.AUTH_ME);
+    final response = await http.get(uri, headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    });
+    return UserRegisterData.fromJson(jsonDecode(response.body));
+  }
+
   Future<UserRegisterData> login(String email, String password) async {
     Uri uri = Uri.parse(APIResource.LOGIN);
     HttpCall call = HttpCall();
@@ -50,18 +79,21 @@ class ApiCall {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
     };
-    print(uri.toString());
+    // print(uri.toString());
     final params = <String, dynamic>{
       'email': email,
       'password': password,
     };
     http.Response response = await call.post(uri, headers, params);
-    print(response.body);
+    // print(response.body);
     return UserRegisterData.fromJson(jsonDecode(response.body));
   }
 
   Future<DailyMetricsData> getDailyMetricsToday(String token) async {
-    Uri uri = Uri.parse(APIResource.DAILY_METRICS_TODAY);
+    // Pass the user's local date explicitly — /today uses the server's UTC
+    // date which mismatches when local time is past midnight but UTC is not.
+    final localDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    Uri uri = Uri.parse(APIResource.DAILY_METRICS_DATE + localDate);
     HttpCall call = HttpCall();
     try {
       http.Response response = await call.get(
@@ -71,10 +103,8 @@ class ApiCall {
           'Authorization': 'Bearer $token',
         },
       );
-      print("DailyMetricsData ${response.body}");
       return DailyMetricsData.fromJson(jsonDecode(response.body));
     } catch (e) {
-      print("Error: $e");
       return DailyMetricsData.fromJson({"status": false});
     }
   }
@@ -91,14 +121,14 @@ class ApiCall {
         'Authorization': 'Bearer $token',
       },
     );
-    print("DailyMetricsData By Date ${response.body}");
+    // print("DailyMetricsData By Date ${response.body}");
     return DailyMetricsData.fromJson(jsonDecode(response.body));
   }
 
   Future<void> updateWaterIntake(
       int currentML, String token, String date) async {
     Uri uri = Uri.parse(APIResource.UPDATE_WATER_INTAKE + date);
-    print(uri.toString());
+    // print(uri.toString());
     HttpCall call = HttpCall();
 
     final response = await http.patch(
@@ -112,7 +142,7 @@ class ApiCall {
         "syncSource": "manual"
       }),
     );
-    print("response ${response.body}");
+    // print("response ${response.body}");
     //return DailyMetricsData.fromJson(jsonDecode(response.body));
   }
 
@@ -128,6 +158,7 @@ class ApiCall {
     String token,
   ) async {
     Uri uri = Uri.parse(APIResource.ADD_EXERCISE_LOG);
+    // print(uri);
     final body = jsonEncode({
       "date": date,
       "time": time,
@@ -138,15 +169,16 @@ class ApiCall {
       "caloriesBurned": caloriesBurned,
       "source": source
     });
-    print(body);
+    // print(body);
     final response = await http.post(uri,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
         body: body);
-
-    print("Exercise Log response ${response.body}");
+    if (response.statusCode != 201 && response.statusCode != 200) {
+      throw Exception('Exercise log failed: ${response.statusCode}');
+    }
   }
 
   Future<void> addFoodLog(
@@ -167,7 +199,7 @@ class ApiCall {
       "servings": servings,
       "source": source
     });
-    print(body);
+    // print(body);
     final response = await http.post(uri,
         headers: {
           'Content-Type': 'application/json',
@@ -175,7 +207,7 @@ class ApiCall {
         },
         body: body);
 
-    print("Food Log response ${response.body}");
+    // print("Food Log response ${response.body}");
   }
 
   Future<void> deleteFoodLog(String id, String token) async {
@@ -187,7 +219,7 @@ class ApiCall {
         'Authorization': 'Bearer $token',
       },
     );
-    print("Delete Food Log response ${response.body}");
+    // print("Delete Food Log response ${response.body}");
   }
 
   Future<void> deleteExerciseLog(String id, String token) async {
@@ -199,12 +231,12 @@ class ApiCall {
         'Authorization': 'Bearer $token',
       },
     );
-    print("Delete Food Log response ${response.body}");
+    // print("Delete Food Log response ${response.body}");
   }
 
   Future<FoodData> addFood(Food food, String token) async {
     Uri uri = Uri.parse(APIResource.ADD_FOOD);
-    print(uri.toString());
+    // print(uri.toString());
     // final body = jsonEncode({
     //   "name": "Boiled Egg",
     //   "brand": "Home",
@@ -261,7 +293,7 @@ class ApiCall {
       },
       "source": food.source
     });
-    print(body);
+    // print(body);
     final response = await http.post(uri,
         headers: {
           'Content-Type': 'application/json',
@@ -269,20 +301,38 @@ class ApiCall {
         },
         body: body);
 
-    print("Exercise Log response ${response.body}");
+    // print("Exercise Log response ${response.body}");
     return FoodData.fromJson(jsonDecode(response.body));
   }
 
-  Future<SearchFoodData> searchFood(String token, String query) async {
-    Uri uri = Uri.parse(APIResource.SEARCH_FOOD + query);
+  Future<SearchFoodData> searchFood(String token, String query,
+      {int page = 1}) async {
+    Uri uri = Uri.parse(APIResource.SEARCH_FOOD +
+        Uri.encodeQueryComponent(query) +
+        '&page=${page}');
     final response = await http.get(
       uri,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
+        'Authorization': 'Bearer ${token}',
       },
     );
-    print("Search Food response ${response.body}");
+    return SearchFoodData.fromJson(jsonDecode(response.body));
+  }
+
+  /// Search only this user's personal foods (source=user, createdBy=me).
+  Future<SearchFoodData> searchMyFood(String token, String query,
+      {int page = 1}) async {
+    Uri uri = Uri.parse(APIResource.SEARCH_MY_FOOD +
+        Uri.encodeQueryComponent(query) +
+        '&page=${page}');
+    final response = await http.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${token}',
+      },
+    );
     return SearchFoodData.fromJson(jsonDecode(response.body));
   }
 
@@ -295,7 +345,64 @@ class ApiCall {
         'Authorization': 'Bearer $token',
       },
     );
-    print("Recent Activity response ${response.body}");
+    // print("Recent Activity response ${response.body}");
     return RecentActivityData.fromJson(jsonDecode(response.body));
+  }
+
+  Future<UserRegisterData> updateProfile({
+    required String token,
+    String? fullName,
+    String? heightCm,
+    String? weightKg,
+    String? activityLevel,
+    String? goalType,
+  }) async {
+    Uri uri = Uri.parse(APIResource.UPDATE_PROFILE);
+    final body = <String, dynamic>{};
+    if (fullName != null && fullName.isNotEmpty) body['fullName'] = fullName;
+    if (heightCm != null) body['heightCm'] = int.tryParse(heightCm) ?? 0;
+    if (weightKg != null) body['weightKg'] = int.tryParse(weightKg) ?? 0;
+    if (activityLevel != null) body['activityLevel'] = activityLevel;
+    if (goalType != null) body['goalType'] = goalType;
+
+    final response = await http.patch(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(body),
+    );
+    // print("updateProfile ${response.body}");
+    return UserRegisterData.fromJson(jsonDecode(response.body));
+  }
+
+  Future<void> deleteAccount(String token) async {
+    Uri uri = Uri.parse(APIResource.DELETE_ACCOUNT);
+    final response = await http.delete(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    // print("Delete Account response ${response.statusCode} ${response.body}");
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete account. Please try again.');
+    }
+  }
+
+  /// Fetch daily metrics for a date range, returns list of raw maps.
+  Future<List<Map<String, dynamic>>> getWeeklyMetrics(
+      String startDate, String endDate, String token) async {
+    final uri = Uri.parse(
+        '${APIResource.DAILY_METRICS_RANGE}?start=$startDate&end=$endDate');
+    final response = await http.get(uri, headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    });
+    final body = jsonDecode(response.body) as Map<String, dynamic>;
+    final list = body['metrics'] as List<dynamic>? ?? [];
+    return list.cast<Map<String, dynamic>>();
   }
 }

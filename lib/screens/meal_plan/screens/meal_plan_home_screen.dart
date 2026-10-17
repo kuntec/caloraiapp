@@ -4,7 +4,6 @@ import 'package:calorai/screens/meal_plan/screens/generated_meal_plan_screen.dar
 import 'package:calorai/screens/meal_plan/services/meal_plan_service.dart';
 import 'package:flutter/material.dart';
 import 'nutrition_profile_screen.dart';
-import 'meal_plan_history_screen.dart';
 
 class MealPlanHomeScreen extends StatefulWidget {
   final String userId;
@@ -18,6 +17,13 @@ class _MealPlanHomeScreenState extends State<MealPlanHomeScreen> {
   final service = MealPlanService();
   bool isLoading = true;
   List<MealPlanModel> plans = [];
+  int _selectedDays = 1;
+
+  final _durationOptions = [
+    {'label': '1 Day', 'days': 1},
+    {'label': '3 Days', 'days': 3},
+    {'label': '7 Days', 'days': 7},
+  ];
 
   @override
   void initState() {
@@ -37,10 +43,15 @@ class _MealPlanHomeScreenState extends State<MealPlanHomeScreen> {
     }
   }
 
+  String _durationLabel(MealPlanModel plan) {
+    if (plan.durationType == '3day') return '3-Day Plan';
+    if (plan.durationType == '7day') return '7-Day Plan';
+    return '1-Day Plan';
+  }
+
   @override
   Widget build(BuildContext context) {
     const bg = Color(0xFFF7F7FB);
-    const card = Color(0xFFF3F2F8);
     const ink = primaryOrangeDark;
     return Scaffold(
       backgroundColor: bg,
@@ -101,7 +112,56 @@ class _MealPlanHomeScreenState extends State<MealPlanHomeScreen> {
                         color: Colors.white,
                       ),
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 16),
+                    // Duration selector
+                    const Text(
+                      "Plan Duration",
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: _durationOptions.map((option) {
+                        final days = option['days'] as int;
+                        final isSelected = _selectedDays == days;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: GestureDetector(
+                            onTap: () => setState(() => _selectedDays = days),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 180),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? Colors.white
+                                    : Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? Colors.white
+                                      : Colors.white.withOpacity(0.4),
+                                ),
+                              ),
+                              child: Text(
+                                option['label'] as String,
+                                style: TextStyle(
+                                  color: isSelected
+                                      ? primaryOrangeDark
+                                      : Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -111,6 +171,7 @@ class _MealPlanHomeScreenState extends State<MealPlanHomeScreen> {
                             MaterialPageRoute(
                               builder: (_) => NutritionProfileScreen(
                                 userId: widget.userId,
+                                selectedDays: _selectedDays,
                               ),
                             ),
                           );
@@ -135,21 +196,6 @@ class _MealPlanHomeScreenState extends State<MealPlanHomeScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            // SizedBox(
-            //   width: double.infinity,
-            //   child: OutlinedButton(
-            //     onPressed: () {
-            //       Navigator.push(
-            //         context,
-            //         MaterialPageRoute(
-            //           builder: (_) =>
-            //               MealPlanHistoryScreen(userId: widget.userId),
-            //         ),
-            //       );
-            //     },
-            //     child: const Text("View Meal Plan History"),
-            //   ),
-            // ),
             Expanded(
               child: mealHistory(),
             ),
@@ -165,7 +211,6 @@ class _MealPlanHomeScreenState extends State<MealPlanHomeScreen> {
         : plans.isEmpty
             ? const Center(child: Text("No meal plans found"))
             : ListView.builder(
-                //padding: const EdgeInsets.all(10),
                 itemCount: plans.length,
                 itemBuilder: (context, index) {
                   final plan = plans[index];
@@ -190,11 +235,19 @@ class _MealPlanHomeScreenState extends State<MealPlanHomeScreen> {
                       ],
                     ),
                     child: ListTile(
-                      title: Text("Meal Plan ${index + 1}"),
-                      subtitle: Text(
-                        "${plan.totalCalories.toStringAsFixed(0)} kcal • ${plan.meals.length} meals",
+                      title: Text(
+                        "${_durationLabel(plan)} — Plan ${index + 1}",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                      subtitle: Text(
+                        "${plan.totalCalories.toStringAsFixed(0)} kcal • ${plan.isMultiDay ? '${plan.days.length} days' : '${plan.meals.length} meals'}",
+                        style: const TextStyle(color: Colors.white70),
+                      ),
+                      trailing: const Icon(Icons.arrow_forward_ios,
+                          size: 16, color: Colors.white),
                       onTap: () {
                         Navigator.push(
                           context,

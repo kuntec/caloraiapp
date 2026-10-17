@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:calorai/api/api_call.dart';
 import 'package:calorai/constants/constants.dart';
 import 'package:calorai/constants/utility.dart';
@@ -25,6 +27,7 @@ class AuthChoiceScreen extends StatefulWidget {
 
 class _AuthChoiceScreenState extends State<AuthChoiceScreen> {
   bool _loadingGoogle = false;
+  bool _loadingApple = false;
 
   TextEditingController _phoneController = TextEditingController();
   TextEditingController _otpController = TextEditingController();
@@ -54,7 +57,7 @@ class _AuthChoiceScreenState extends State<AuthChoiceScreen> {
         verificationId = verId;
       },
       verificationFailed: (e) {
-        print(e.message);
+        // print(e.message);
       },
       verificationCompleted: (credential) async {
         await FirebaseAuth.instance.signInWithCredential(credential);
@@ -74,7 +77,7 @@ class _AuthChoiceScreenState extends State<AuthChoiceScreen> {
       smsCode: _otpController.text.trim(),
     );
     if (!mounted) return;
-    print(userCredential.user!.phoneNumber);
+    // print(userCredential.user!.phoneNumber);
     setState(() {
       isOTPSent = false;
     });
@@ -87,18 +90,15 @@ class _AuthChoiceScreenState extends State<AuthChoiceScreen> {
 
       if (!mounted) return;
 
-      SharedPreferences preferences = await SharedPreferences.getInstance();
-      preferences.setString("email", userCredential.user!.email!);
-      preferences.setString("uid", userCredential.user!.uid);
-      bool isRegisterComplete =
-          preferences.getBool("isRegisterComplete") ?? false;
+      final email = userCredential.user!.email!;
+      final uid = userCredential.user!.uid;
+      final name = userCredential.user!.displayName ?? '';
 
-      if (!isRegisterComplete) {
-        await login(userCredential.user!.email!, userCredential.user!.uid);
-      } else {
-        Navigator.pushReplacement(context,
-            MaterialPageRoute(builder: (context) => MainNavigationScreen()));
-      }
+      SharedPreferences preferences = await SharedPreferences.getInstance();
+      preferences.setString("email", email);
+      preferences.setString("uid", uid);
+
+      await _loginWithSocial(email: email, uid: uid, name: name);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -109,8 +109,92 @@ class _AuthChoiceScreenState extends State<AuthChoiceScreen> {
     }
   }
 
+  Future<void> _handleApple() async {
+    setState(() => _loadingApple = true);
+    try {
+      // signInWithApple returns both the credential and the user's name.
+      // Apple only provides the name on the VERY FIRST sign-in per device/app.
+      // We capture it immediately and store it — on subsequent sign-ins name will be empty.
+      final result = await AuthService().signInWithApple();
+      if (!mounted) return;
+
+      final user = result.credential.user!;
+
+      // Apple only sends the email on the very first sign-in.
+      // We must NOT call FirebaseAuth.signOut() on logout — doing so clears
+      // Firebase's cached email and subsequent sign-ins return null.
+      // If Firebase returns null, fall back to the email we saved last time.
+      SharedPreferences preferences = await SharedPreferences.getInstance();
+      final savedEmail = preferences.getString("email") ?? '';
+      final email = (user.email?.isNotEmpty == true)
+          ? user.email!
+          : (savedEmail.isNotEmpty ? savedEmail : '${user.uid}@apple.com');
+      final displayName = result.displayName ?? user.displayName ?? '';
+
+      preferences.setString("email", email);
+      preferences.setString("uid", user.uid);
+
+      await _loginWithSocial(email: email, uid: user.uid, name: displayName);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+      );
+    } finally {
+      if (mounted) setState(() => _loadingApple = false);
+    }
+  }
+
+  /// Shared social-auth handler for both Google and Apple.
+  ///
+  /// Calls /auth/social-login with the Firebase UID (always available, never
+  /// changes, even after reinstall or when Apple withholds the email).
+  ///   - User found → save token → MainNavigationScreen (no profile setup)
+  ///   - User not found → ProfileSetupScreen (new user)
+  Future<void> _loginWithSocial({
+    required String email,
+    required String uid,
+    required String name,
+  }) async {
+    try {
+      final result = await ApiCall().socialLogin(uid, email);
+      final token = result.token?.toString() ?? '';
+
+      if (token.isNotEmpty) {
+        // Existing user — save credentials and go straight to the dashboard
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('token', token);
+        await prefs.setString('id', result.user?.id?.toString() ?? '');
+        await prefs.setString('email', result.user?.email?.toString() ?? email);
+        await prefs.setBool('isRegisterComplete', true);
+        if (!mounted) return;
+        Navigator.pushReplacement(
+            context, MaterialPageRoute(builder: (_) => MainNavigationScreen()));
+        return;
+      }
+
+      // New user — send to profile setup
+      if (!mounted) return;
+      Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (_) => ProfileSetupScreen(
+                    email: email,
+                    password: uid,
+                    name: name,
+                  )));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Sign in error: ${e.toString()}")),
+      );
+    }
+  }
+
+  /// Email + password login — NOT used for social auth.
   Future<void> login(String email, String password) async {
     ApiCall apiCall = ApiCall();
+
     UserRegisterData userRegisterData = await apiCall.login(email, password);
     if (userRegisterData.status) {
       SharedPreferences preferences = await SharedPreferences.getInstance();
@@ -118,21 +202,18 @@ class _AuthChoiceScreenState extends State<AuthChoiceScreen> {
       preferences.setString("token", userRegisterData.token!);
       preferences.setString("id", userRegisterData.user!.id!);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Login Successful")),
+        const SnackBar(content: Text("Login Successful")),
       );
       Navigator.pushReplacement(context,
           MaterialPageRoute(builder: (context) => MainNavigationScreen()));
     } else {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(userRegisterData.message!)),
+        SnackBar(
+          content:
+              Text(userRegisterData.message ?? "Invalid email or password"),
+        ),
       );
-      Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (context) => ProfileSetupScreen(
-                    email: email,
-                    password: password,
-                  )));
     }
   }
 
@@ -154,292 +235,344 @@ class _AuthChoiceScreenState extends State<AuthChoiceScreen> {
       //   elevation: 0,
       //   title: const Text("Login"),
       // ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Logo
-              Center(
-                child: Container(
-                  height: 100,
-                  width: 100,
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Logo
+                Center(
+                  child: Container(
+                    height: 100,
+                    width: 100,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: const [
+                        // BoxShadow(
+                        //   blurRadius: 18,
+                        //   offset: Offset(0, 8),
+                        //   color: Color(0x14000000),
+                        // )
+                      ],
+                    ),
+                    // child: const Icon(Icons.local_dining,
+                    //     color: primaryOrangeDark, size: 32),
+                    // Replace with your asset logo:
+                    child: Image.asset("assets/images/logo_alpha.png"),
+                  ),
+                ),
+
+                // Card
+                Container(
+                  padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: const [
-                      // BoxShadow(
-                      //   blurRadius: 18,
-                      //   offset: Offset(0, 8),
-                      //   color: Color(0x14000000),
-                      // )
+                      BoxShadow(
+                        blurRadius: 24,
+                        offset: Offset(0, 10),
+                        color: Color(0x0F000000),
+                      )
                     ],
                   ),
-                  // child: const Icon(Icons.local_dining,
-                  //     color: primaryOrangeDark, size: 32),
-                  // Replace with your asset logo:
-                  child: Image.asset("assets/images/logo_alpha.png"),
-                ),
-              ),
-
-              // Card
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: const [
-                    BoxShadow(
-                      blurRadius: 24,
-                      offset: Offset(0, 10),
-                      color: Color(0x0F000000),
-                    )
-                  ],
-                ),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      _InputField(
-                        controller: _emailCtrl,
-                        hintText: "Email address",
-                        prefixIcon: Icons.email_outlined,
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (v) {
-                          final value = (v ?? "").trim();
-                          if (value.isEmpty) return "Email is required";
-                          final ok =
-                              RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value);
-                          if (!ok) return "Enter a valid email";
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 14),
-                      _InputField(
-                        controller: _passCtrl,
-                        hintText: "Password",
-                        prefixIcon: Icons.lock_outline,
-                        obscureText: _obscure,
-                        suffixIcon:
-                            _obscure ? Icons.visibility_off : Icons.visibility,
-                        onSuffixTap: () => setState(() => _obscure = !_obscure),
-                        validator: (v) {
-                          final value = (v ?? "");
-                          if (value.isEmpty) return "Password is required";
-                          if (value.length < 6) return "Minimum 6 characters";
-                          return null;
-                        },
-                      ),
-
-                      const SizedBox(height: 10),
-
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: _onForgotPassword,
-                          style: TextButton.styleFrom(
-                            foregroundColor: primaryOrangeDark,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 4),
-                          ),
-                          child: const Text(
-                            "Forgot password?",
-                            style: TextStyle(
-                                fontSize: 13, fontWeight: FontWeight.w600),
-                          ),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        _InputField(
+                          controller: _emailCtrl,
+                          hintText: "Email address",
+                          prefixIcon: Icons.email_outlined,
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (v) {
+                            final value = (v ?? "").trim();
+                            if (value.isEmpty) return "Email is required";
+                            final ok =
+                                RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value);
+                            if (!ok) return "Enter a valid email";
+                            return null;
+                          },
                         ),
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      GradientButton(
-                        text: _loading ? "Logging in..." : "Login",
-                        enabled: !_loading,
-                        onPressed: () {},
-                        gradient: const LinearGradient(
-                          colors: [primaryOrangeDark, primaryOrangeLight],
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
+                        const SizedBox(height: 14),
+                        _InputField(
+                          controller: _passCtrl,
+                          hintText: "Password",
+                          prefixIcon: Icons.lock_outline,
+                          obscureText: _obscure,
+                          suffixIcon: _obscure
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          onSuffixTap: () =>
+                              setState(() => _obscure = !_obscure),
+                          validator: (v) {
+                            final value = (v ?? "");
+                            if (value.isEmpty) return "Password is required";
+                            if (value.length < 6) return "Minimum 6 characters";
+                            return null;
+                          },
                         ),
-                      ),
+                        const SizedBox(height: 10),
 
-                      const SizedBox(height: 22),
-
-                      // Divider OR
-                      Row(
-                        children: const [
-                          Expanded(child: Divider(color: border)),
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 10),
-                            child: Text(
-                              "OR",
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: _onForgotPassword,
+                            style: TextButton.styleFrom(
+                              foregroundColor: primaryOrangeDark,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 4),
+                            ),
+                            child: const Text(
+                              "Forgot password?",
                               style: TextStyle(
-                                  fontSize: 12, color: Color(0xFF9CA3AF)),
+                                  fontSize: 13, fontWeight: FontWeight.w600),
                             ),
                           ),
-                          Expanded(child: Divider(color: border)),
-                        ],
-                      ),
+                        ),
 
-                      const SizedBox(height: 14),
-                      const Text(
-                        "You can login using Google.",
-                        style: TextStyle(color: Colors.black54),
-                      ),
-                      const SizedBox(height: 8),
-                      // Google button (optional)
+                        const SizedBox(height: 8),
 
-                      InkWell(
-                        onTap: _loadingGoogle ? null : _handleGoogle,
-                        child: Container(
-                          decoration: kContainerBox,
-                          padding: EdgeInsets.all(10),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              Image.asset("assets/images/google.png"),
-                              Text(
-                                _loadingGoogle
-                                    ? "Signing in..."
-                                    : "Continue with Google",
-                                style: TextStyle(
-                                  color: textPrimary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
+                        GradientButton(
+                          text: _loading ? "Logging in..." : "Login",
+                          enabled: !_loading,
+                          onPressed: () async {
+                            if (!_formKey.currentState!.validate()) return;
+                            setState(() => _loading = true);
+                            try {
+                              await login(
+                                _emailCtrl.text.trim(),
+                                _passCtrl.text,
+                              );
+                            } finally {
+                              if (mounted) setState(() => _loading = false);
+                            }
+                          },
+                          gradient: const LinearGradient(
+                            colors: [primaryOrangeDark, primaryOrangeLight],
+                            begin: Alignment.bottomCenter,
+                            end: Alignment.topCenter,
                           ),
                         ),
-                      ),
 
-                      // OutlinedButton.icon(
-                      //   onPressed: _loadingGoogle ? null : _handleGoogle,
-                      //   icon: const Icon(Icons.g_mobiledata,
-                      //       size: 26, color: textPrimary),
-                      //   label: Text(
-                      //     _loadingGoogle
-                      //         ? "Signing in..."
-                      //         : "Continue with Google",
-                      //     style: TextStyle(
-                      //       color: textPrimary,
-                      //       fontWeight: FontWeight.w600,
-                      //     ),
-                      //   ),
-                      //   style: OutlinedButton.styleFrom(
-                      //     backgroundColor: Colors.white,
-                      //     side: const BorderSide(color: border),
-                      //     shape: RoundedRectangleBorder(
-                      //       borderRadius: BorderRadius.circular(14),
-                      //     ),
-                      //     minimumSize: const Size.fromHeight(52),
-                      //   ),
-                      // ),
-                      const SizedBox(height: 8),
-                      // Google button (optional)
-                      // OutlinedButton.icon(
-                      //   onPressed: () {
-                      //     MyUtility.changePage(context, LoginOtpScreen());
-                      //   },
-                      //   icon: const Icon(Icons.g_mobiledata,
-                      //       size: 26, color: textPrimary),
-                      //   label: Text(
-                      //     "Continue with Phone OTP",
-                      //     style: TextStyle(
-                      //       color: textPrimary,
-                      //       fontWeight: FontWeight.w600,
-                      //     ),
-                      //   ),
-                      //   style: OutlinedButton.styleFrom(
-                      //     backgroundColor: Colors.white,
-                      //     side: const BorderSide(color: border),
-                      //     shape: RoundedRectangleBorder(
-                      //       borderRadius: BorderRadius.circular(14),
-                      //     ),
-                      //     minimumSize: const Size.fromHeight(52),
-                      //   ),
-                      // ),
-                    ],
+                        const SizedBox(height: 22),
+
+                        // Divider OR
+                        Row(
+                          children: const [
+                            Expanded(child: Divider(color: border)),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 10),
+                              child: Text(
+                                "OR",
+                                style: TextStyle(
+                                    fontSize: 12, color: Color(0xFF9CA3AF)),
+                              ),
+                            ),
+                            Expanded(child: Divider(color: border)),
+                          ],
+                        ),
+
+                        const SizedBox(height: 14),
+                        const Text(
+                          "You can login using Google.",
+                          style: TextStyle(color: Colors.black54),
+                        ),
+                        const SizedBox(height: 8),
+                        // Google button (optional)
+
+                        InkWell(
+                          onTap: _loadingGoogle ? null : _handleGoogle,
+                          child: Container(
+                            decoration: kContainerBox,
+                            padding: EdgeInsets.all(10),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                Image.asset("assets/images/google.png"),
+                                Text(
+                                  _loadingGoogle
+                                      ? "Signing in..."
+                                      : "Continue with Google",
+                                  style: TextStyle(
+                                    color: textPrimary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        // OutlinedButton.icon(
+                        //   onPressed: _loadingGoogle ? null : _handleGoogle,
+                        //   icon: const Icon(Icons.g_mobiledata,
+                        //       size: 26, color: textPrimary),
+                        //   label: Text(
+                        //     _loadingGoogle
+                        //         ? "Signing in..."
+                        //         : "Continue with Google",
+                        //     style: TextStyle(
+                        //       color: textPrimary,
+                        //       fontWeight: FontWeight.w600,
+                        //     ),
+                        //   ),
+                        //   style: OutlinedButton.styleFrom(
+                        //     backgroundColor: Colors.white,
+                        //     side: const BorderSide(color: border),
+                        //     shape: RoundedRectangleBorder(
+                        //       borderRadius: BorderRadius.circular(14),
+                        //     ),
+                        //     minimumSize: const Size.fromHeight(52),
+                        //   ),
+                        // ),
+                        // Apple Sign-In (iOS only)
+                        if (Platform.isIOS) ...[
+                          const SizedBox(height: 10),
+                          InkWell(
+                            onTap: _loadingApple ? null : _handleApple,
+                            child: Container(
+                              decoration: kContainerBox,
+                              padding: const EdgeInsets.all(10),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  const Icon(Icons.apple,
+                                      size: 24, color: Colors.black),
+                                  Text(
+                                    _loadingApple
+                                        ? "Signing in..."
+                                        : "Continue with Apple",
+                                    style: const TextStyle(
+                                      color: textPrimary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+
+                        const SizedBox(height: 8),
+                        // Google button (optional)
+                        // OutlinedButton.icon(
+                        //   onPressed: () {
+                        //     MyUtility.changePage(context, LoginOtpScreen());
+                        //   },
+                        //   icon: const Icon(Icons.g_mobiledata,
+                        //       size: 26, color: textPrimary),
+                        //   label: Text(
+                        //     "Continue with Phone OTP",
+                        //     style: TextStyle(
+                        //       color: textPrimary,
+                        //       fontWeight: FontWeight.w600,
+                        //     ),
+                        //   ),
+                        //   style: OutlinedButton.styleFrom(
+                        //     backgroundColor: Colors.white,
+                        //     side: const BorderSide(color: border),
+                        //     shape: RoundedRectangleBorder(
+                        //       borderRadius: BorderRadius.circular(14),
+                        //     ),
+                        //     minimumSize: const Size.fromHeight(52),
+                        //   ),
+                        // ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
 
-              // const Text(
-              //   "Choose a sign-in method",
-              //   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-              // ),
+                // const Text(
+                //   "Choose a sign-in method",
+                //   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                // ),
 
-              // const Text(
-              //   "You can login using Google or Phone OTP.",
-              //   style: TextStyle(color: Colors.black54),
-              // ),
-              //const SizedBox(height: 24),
-              // _AuthButton(
-              //   icon: Icons.g_mobiledata,
-              //   title:
-              //       _loadingGoogle ? "Signing in..." : "Continue with Google",
-              //   onTap: _loadingGoogle ? null : _handleGoogle,
-              // ),
-              //const SizedBox(height: 14),
-              // TextField(
-              //     controller: _phoneController,
-              //     keyboardType: TextInputType.phone,
-              //     decoration: InputDecoration(
-              //         border: OutlineInputBorder(
-              //           borderRadius: BorderRadius.all(Radius.circular(20)),
-              //         ),
-              //         hintText: "Phone Number",
-              //         prefixIcon: const Icon(Icons.phone))),
-              //const SizedBox(height: 14),
-              // isOTPSent
-              //     ? TextField(
-              //         controller: _otpController,
-              //         keyboardType: TextInputType.number,
-              //         decoration: InputDecoration(
-              //             border: OutlineInputBorder(
-              //               borderRadius: BorderRadius.all(Radius.circular(20)),
-              //             ),
-              //             hintText: "OTP Number",
-              //             prefixIcon: const Icon(Icons.pin)))
-              //     : SizedBox(),
-              // const SizedBox(height: 14),
-              // _AuthButton(
-              //   icon: Icons.phone_android,
-              //   title: isOTPSent ? "Verify OTP" : "Continue with Phone (OTP)",
-              //   onTap: () {
-              //     isOTPSent ? verifyOTP() : sendOTP();
-              //     // ScaffoldMessenger.of(context).showSnackBar(
-              //     //   const SnackBar(content: Text("Phone OTP: Step 3")),
-              //     // );
-              //   },
-              // ),
-              // const SizedBox(height: 14),
-              // _AuthButton(
-              //   icon: Icons.phone_android,
-              //   title: "On Boarding",
-              //   onTap: () {
-              //     MyUtility.changePage(context, OnBoardingScreen());
-              //     // ScaffoldMessenger.of(context).showSnackBar(
-              //     //   const SnackBar(content: Text("Phone OTP: Step 3")),
-              //     // );
-              //   },
-              // ),
-              const Spacer(),
-              // _AuthButton(
-              //   icon: Icons.phone_android,
-              //   title: "Register",
-              //   onTap: () {
-              //     MyUtility.changePage(context, RegisterScreen());
-              //     // ScaffoldMessenger.of(context).showSnackBar(
-              //     //   const SnackBar(content: Text("Phone OTP: Step 3")),
-              //     // );
-              //   },
-              // ),
-              const Text(
-                "By continuing you agree to our Terms & Privacy Policy.",
-                style: TextStyle(fontSize: 12, color: Colors.black54),
-              ),
-            ],
+                // const Text(
+                //   "You can login using Google or Phone OTP.",
+                //   style: TextStyle(color: Colors.black54),
+                // ),
+                //const SizedBox(height: 24),
+                // _AuthButton(
+                //   icon: Icons.g_mobiledata,
+                //   title:
+                //       _loadingGoogle ? "Signing in..." : "Continue with Google",
+                //   onTap: _loadingGoogle ? null : _handleGoogle,
+                // ),
+                //const SizedBox(height: 14),
+                // TextField(
+                //     controller: _phoneController,
+                //     keyboardType: TextInputType.phone,
+                //     decoration: InputDecoration(
+                //         border: OutlineInputBorder(
+                //           borderRadius: BorderRadius.all(Radius.circular(20)),
+                //         ),
+                //         hintText: "Phone Number",
+                //         prefixIcon: const Icon(Icons.phone))),
+                //const SizedBox(height: 14),
+                // isOTPSent
+                //     ? TextField(
+                //         controller: _otpController,
+                //         keyboardType: TextInputType.number,
+                //         decoration: InputDecoration(
+                //             border: OutlineInputBorder(
+                //               borderRadius: BorderRadius.all(Radius.circular(20)),
+                //             ),
+                //             hintText: "OTP Number",
+                //             prefixIcon: const Icon(Icons.pin)))
+                //     : SizedBox(),
+                // const SizedBox(height: 14),
+                // _AuthButton(
+                //   icon: Icons.phone_android,
+                //   title: isOTPSent ? "Verify OTP" : "Continue with Phone (OTP)",
+                //   onTap: () {
+                //     isOTPSent ? verifyOTP() : sendOTP();
+                //     // ScaffoldMessenger.of(context).showSnackBar(
+                //     //   const SnackBar(content: Text("Phone OTP: Step 3")),
+                //     // );
+                //   },
+                // ),
+                // const SizedBox(height: 14),
+                // _AuthButton(
+                //   icon: Icons.phone_android,
+                //   title: "On Boarding",
+                //   onTap: () {
+                //     MyUtility.changePage(context, OnBoardingScreen());
+                //     // ScaffoldMessenger.of(context).showSnackBar(
+                //     //   const SnackBar(content: Text("Phone OTP: Step 3")),
+                //     // );
+                //   },
+                // ),
+                const SizedBox(height: 32),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text("Don't have an account?",
+                        style: TextStyle(fontSize: 13, color: Colors.black54)),
+                    TextButton(
+                      onPressed: () => Navigator.push(context,
+                          MaterialPageRoute(builder: (_) => RegisterScreen())),
+                      style: TextButton.styleFrom(
+                          foregroundColor: primaryOrangeDark,
+                          padding: const EdgeInsets.symmetric(horizontal: 6)),
+                      child: const Text("Sign Up",
+                          style: TextStyle(
+                              fontSize: 13, fontWeight: FontWeight.w700)),
+                    ),
+                  ],
+                ),
+                const Text(
+                  "By continuing you agree to our Terms & Privacy Policy.",
+                  style: TextStyle(fontSize: 12, color: Colors.black54),
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
           ),
         ),
       ),
@@ -517,7 +650,10 @@ class _InputField extends StatelessWidget {
       keyboardType: keyboardType,
       validator: validator,
       obscureText: obscureText,
-      style: const TextStyle(fontSize: 14),
+      textCapitalization: TextCapitalization.none,
+      autocorrect: false,
+      enableSuggestions: false,
+      style: const TextStyle(fontFamily: '', fontSize: 14),
       decoration: InputDecoration(
         filled: true,
         fillColor: bgField,

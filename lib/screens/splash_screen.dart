@@ -1,15 +1,11 @@
 import 'dart:async';
 
 import 'package:calorai/constants/utility.dart';
-import 'package:calorai/screens/auth_screen.dart';
 import 'package:calorai/screens/authenticate/auth_choice_screen.dart';
-import 'package:calorai/screens/authenticate/login_otp_screen.dart';
-import 'package:calorai/screens/dashboard_screen.dart';
-import 'package:calorai/screens/login_screen.dart';
 import 'package:calorai/screens/main_navigation_screen.dart';
-import 'package:calorai/screens/on_boarding_screen.dart';
-import 'package:calorai/screens/profile_setup_screen.dart';
+import 'package:calorai/screens/subscription_page.dart';
 import 'package:flutter/material.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -29,15 +25,42 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void goToHome() async {
-    SharedPreferences preferences = await SharedPreferences.getInstance();
-    String? token = preferences.getString("token");
-    bool? isRegisterComplete =
+    final preferences = await SharedPreferences.getInstance();
+    final bool isRegisterComplete =
         preferences.getBool("isRegisterComplete") ?? false;
 
-    if (isRegisterComplete) {
-      MyUtility.replacePage(context, MainNavigationScreen());
-    } else {
+    if (!isRegisterComplete) {
       MyUtility.replacePage(context, AuthChoiceScreen());
+      return;
+    }
+    // Returning user — check subscription status
+    try {
+      final customerInfo = await Purchases.getCustomerInfo();
+      final isPremium = customerInfo.entitlements.active.isNotEmpty;
+
+      if (isPremium) {
+        MyUtility.replacePage(context, MainNavigationScreen());
+        return;
+      }
+
+      // Not premium — check trial
+      final int? trialStart = preferences.getInt('trialStartDate');
+      if (trialStart != null) {
+        final trialStartDate = DateTime.fromMillisecondsSinceEpoch(trialStart);
+        final trialExpired =
+            DateTime.now().isAfter(trialStartDate.add(const Duration(days: 7)));
+
+        if (!trialExpired) {
+          MyUtility.replacePage(context, MainNavigationScreen());
+          return;
+        }
+      }
+
+      // Trial expired or never started — show blocking paywall
+      MyUtility.replacePage(context, SubscriptionPage(showSkip: false));
+    } catch (_) {
+      // RevenueCat error — let them in, don't block
+      MyUtility.replacePage(context, MainNavigationScreen());
     }
   }
 
@@ -84,7 +107,7 @@ class _SplashScreenState extends State<SplashScreen> {
 //                  Replace with your logo:
                   child: Padding(
                     padding: const EdgeInsets.all(14),
-                    child: Image.asset("assets/images/logo.jpg"),
+                    child: Image.asset("assets/images/logo.png"),
                   ),
                 ),
 
@@ -101,7 +124,6 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
 
                 const SizedBox(height: 6),
-
                 const Text(
                   "Smart nutrition tracking",
                   style: TextStyle(

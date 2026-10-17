@@ -299,18 +299,33 @@ class _RunSetupScreenState extends State<RunSetupScreen> {
                     elevation: 0,
                   ),
                   onPressed: () {
-                    // Use intensityIndex + selectedMins
-                    // 0 Low, 1 Medium, 2 High
+                    // Map intensityIndex (0=Low, 1=Medium, 2=High) to string
+                    const intensityLabels = ['low', 'medium', 'high'];
+                    final intensityStr = intensityLabels[intensityIndex];
+
+                    // Estimated kcal/min for an average adult (~70 kg)
+                    // Keys match widget.title.toLowerCase()
+                    const Map<String, List<int>> kcalPerMin = {
+                      'run':             [4,  8, 14],
+                      'weight lifting':  [3,  5,  7],
+                    };
+                    final key = widget.title.toLowerCase();
+                    final rates = kcalPerMin[key] ?? [4, 6, 10];
+                    final estimatedCalories = rates[intensityIndex] * selectedMins;
+
+                    // Map title to a backend exercise type
+                    final exerciseType = key == 'run' ? 'run' : 'weight_lifting';
+
                     debugPrint(
-                        "Intensity: $intensityIndex, Minutes: $selectedMins");
+                        "Intensity: $intensityStr, Minutes: $selectedMins, Est. calories: $estimatedCalories");
                     MyUtility.changePage(
                         context,
                         AddBurnedCaloriesScreen(
-                          type: "run",
-                          name: "Manual Calorie",
-                          intensity: "low",
+                          type: exerciseType,
+                          name: widget.title,
+                          intensity: intensityStr,
                           durationMinutes: selectedMins,
-                          caloriesBurned: 0,
+                          caloriesBurned: estimatedCalories,
                         ));
                   },
                   child: const Text(
